@@ -1,7 +1,8 @@
-// import * as userService from "../services/user.service.js";
 import { validationResult } from "express-validator";
+import { prisma } from "../config/db.js";
+import bcrypt from "bcrypt";
 
-export const registerUser = async (req, res, next) => {
+export const registerUser = async (req: any, res: any, next: any) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
@@ -10,23 +11,32 @@ export const registerUser = async (req, res, next) => {
   }
 
   const { fullname, email, password } = req.body;
-//   const emailExists = await userService.getUserByEmail(email);
+  const emailExists = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
   if (emailExists) {
-    // return res.status(400).json({ message: "Email already exists" });
+    return res.status(400).json({ message: "Email already exists" });
   }
-//   const hashedPassword = await userModel.hashPassword(password);
 
-//   const user = await userService.createUser({
-//     firstName: fullname.firstName,
-//     lastName: fullname.lastName,
-//     email,
-//     password: hashedPassword,
-//   });
-//   const token = user.generateAuthToken();
-//   res.status(201).json({ user, token });
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const user = await prisma.user.create({
+    data:{
+      fullname,
+      email,
+      password:hashedPassword
+    }
+  })
+
+
+    // const token = user.generateAuthToken();
+    res.status(201).json({ user });
 };
 
-export const loginUser = async (req, res, next) => {
+export const loginUser = async (req:any, res:any, next:any) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
@@ -36,24 +46,23 @@ export const loginUser = async (req, res, next) => {
 
   const { email, password } = req.body;
 
-//   const user = await userModel.findOne({ email }).select("+password");
+  //   const user = await userModel.findOne({ email }).select("+password");
   if (!user) {
     // return res.status(401).json({ message: "Invalid email or password" });
   }
 
-//   const isMatched = await user.comparePassword(password);
+  //   const isMatched = await user.comparePassword(password);
   if (!isMatched) {
     // return res.status(401).json({ message: "Invalid email or password" });
   }
 
-//   const token = user.generateAuthToken();
+  //   const token = user.generateAuthToken();
 
   // 🔐 remove password before sending
-//   user.password = undefined;
+  //   user.password = undefined;
 
   return res.status(200).json({ user, token });
 };
-
 
 export const logoutUser = (req, res) => {
   res.clearCookie("token", {
