@@ -1,17 +1,17 @@
-import express from "express";
-import { registerUser, loginUser, logoutUser } from "../controllers/authController";
+import { Router } from "express";
+import { registerUser, loginUser, logoutUser } from "../controllers/authControllers.js";
 import { body } from "express-validator";
 
-const router: express.Router = express.Router();
+const router: Router = Router();
 
 router.post(
   "/register",
   [
     body("email").isEmail().withMessage("Invalid Email"),
-    body("fullname.firstName")
+    body("fullname")
       .isLength({ min: 3 })
-      .withMessage("FirstName must be min of 3 character"),
-    body("password").isLength({ min: 6 }).withMessage("write a long password"),
+      .withMessage("Full name must be at least 3 character"),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
   ],
   registerUser,
 );
@@ -20,12 +20,11 @@ router.post(
   "/login",
   [
     body("email").isEmail().withMessage("Invalid Email format"),
-    body("password").isLength({ min: 6 }).withMessage("write a long password"),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters"),
   ],
   loginUser,
 );
 
-
-router.get("/logout",logoutUser);
+router.get("/logout", logoutUser);
 
 export default router;
