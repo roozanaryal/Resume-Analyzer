@@ -57,9 +57,9 @@ export default function Home() {
             Find Jobs
             <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Link>
-          <button className="flex items-center justify-center rounded-2xl border-2 border-gray-200 bg-white px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
+          <Link href="/(hr)/manage-jobs" className="flex items-center justify-center rounded-2xl border-2 border-gray-200 bg-white px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
             Post a Job
-          </button>
+          </Link>
         </div>
 
         {/* Stats Section */}
