@@ -25,6 +25,83 @@ model User {
   password String
   role     Role   @default(CANDIDATE)
 
+  bio     String?
+  resumeURL String?
+  companyName String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  //Relations
+  jobsPosted Job[] @relation("EmployerJob")
+  chatRoomParticipant ChatRoomParticipant[]
+
+
+
+}
+
+model Job{
+  id String @id @default(uuid())
+  title String
+  description String
+  location String
+  salaryRange String?
+  type String?
+
+  employerId String
+  employer User @relation("EmployerJob",fields: [employerId],references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+
+// ----ChatRoom ------
+
+model ChatRoom {
+    id String @id @default(uuid())
+    createdAt DateTime @default(now())
+    messages Message[]
+    participants ChatRoomParticipant[]
+    calls CallLog[]
+
+}
+
+model ChatRoomParticipant {
+      id String @id @default(uuid())
+userId String 
+chatRoomId String
+
+//Relation 
+user User @relation(fields: [userId],references: [id])
+chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id])
+
+
+@@unique([userId, chatRoomId])
+}
+
+model Message {
+      id String @id @default(uuid())
+      content    String
+  senderId   String
+  receiverId String   // Useful for quick lookups
+  chatRoomId String
+
+  //------relation------
+
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+}
+
+model CallLog {
+  id          String    @id @default(cuid())
+  chatRoomId  String
+  callerId    String
+  startTime   DateTime  @default(now())
+  endTime     DateTime?
+  status      String    // MISSED, COMPLETED, ONGOING
+  chatRoom    ChatRoom  @relation(fields: [chatRoomId], references: [id])
 }
