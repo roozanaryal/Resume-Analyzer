@@ -19,7 +19,7 @@ export default function HRLayout({ children }: { children: React.ReactNode }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md">
               <Briefcase className="h-5 w-5" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">JobPortal</span>
+            <span className="text-lg font-bold tracking-tight text-gray-900">Jagir</span>
           </Link>
         </div>
 
