@@ -5,8 +5,8 @@ export default function SignupPage() {
   return (
     <div className="relative min-h-screen bg-white flex items-center justify-center p-4 overflow-hidden">
       {/* Background Decor */}
-      <div className="absolute bottom-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-blue-50/50 blur-3xl" />
-      <div className="absolute top-[-5%] right-[-10%] h-[400px] w-[400px] rounded-full bg-violet-50/50 blur-3xl" />
+      <div className="absolute bottom-[-10%] left-[-10%] h-125 w-125 rounded-full bg-blue-50/50 blur-3xl" />
+      <div className="absolute top-[-5%] right-[-10%] h-100 w-100 rounded-full bg-violet-50/50 blur-3xl" />
 
       {/* Signup Container */}
       <div className="relative z-10 w-full max-w-md">
