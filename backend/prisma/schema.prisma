@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   output   = "../../node_modules/.prisma/client"
@@ -35,7 +30,8 @@ model User {
   //Relations
   jobsPosted Job[] @relation("EmployerJob")
   chatRoomParticipant ChatRoomParticipant[]
-
+  sentMessages Message[] @relation("SentMessages")
+  recivedMessages Message[] @relation("ReceivedMessages")
 
 
 }
@@ -67,16 +63,16 @@ model ChatRoom {
 }
 
 model ChatRoomParticipant {
-      id String @id @default(uuid())
-userId String 
-chatRoomId String
+  id String @id @default(uuid())
+  userId String 
+  chatRoomId String
 
-//Relation 
-user User @relation(fields: [userId],references: [id])
-chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id])
+  //Relation 
+  user User @relation(fields: [userId],references: [id])
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id])
 
 
-@@unique([userId, chatRoomId])
+  @@unique([userId, chatRoomId])
 }
 
 model Message {
