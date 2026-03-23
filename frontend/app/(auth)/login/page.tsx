@@ -3,27 +3,27 @@ import { Briefcase, Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen bg-white flex items-center justify-center p-4 overflow-hidden">
+    <div className="relative h-screen bg-white flex flex-col items-center justify-center py-4 px-4 overflow-hidden">
       {/* Background Decor */}
-      <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-blue-50/50 blur-3xl" />
-      <div className="absolute right-[-5%] bottom-[-10%] h-[400px] w-[400px] rounded-full bg-violet-50/50 blur-3xl" />
+      <div className="absolute top-[-10%] left-[-10%] h-[350px] sm:h-[500px] w-[350px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl" />
+      <div className="absolute right-[-5%] bottom-[-10%] h-[300px] sm:h-[400px] w-[300px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl" />
 
       {/* Login Container */}
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md shrink-0 my-auto">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center mb-5 sm:mb-6">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg group-hover:scale-110 transition-transform">
               <Briefcase className="h-6 w-6" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-gray-900">JobPortal</span>
+            <span className="text-2xl font-bold tracking-tight text-gray-900">Jagir</span>
           </Link>
-          <h1 className="mt-8 text-3xl font-extrabold text-gray-900">Welcome back</h1>
-          <p className="mt-2 text-gray-500">Please enter your details to sign in</p>
+          <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-gray-900">Welcome back</h1>
+          <p className="mt-1.5 text-gray-500 text-center text-sm sm:text-base">Please enter your details to sign in</p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm border border-gray-100 p-8 rounded-3xl shadow-xl shadow-blue-500/5">
-          <form className="space-y-5">
+        <div className="bg-white/80 backdrop-blur-sm border border-gray-100 p-6 sm:p-8 rounded-3xl shadow-xl shadow-blue-500/5">
+          <form className="space-y-4 sm:space-y-5">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
               <div className="relative">
@@ -91,7 +91,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-sm text-gray-500">
+        <p className="mt-5 sm:mt-6 text-center text-sm text-gray-500">
           Don't have an account?{" "}
           <Link href="/signup" className="font-bold text-blue-600 hover:text-blue-700 transition-colors">
             Sign up for free
