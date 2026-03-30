@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import { connectDB, disconnect } from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -33,6 +35,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/jobs", jobRoutes);
+
 
 
 // Error handling middleware
