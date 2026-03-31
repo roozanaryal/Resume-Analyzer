@@ -23,8 +23,8 @@ export default function PostJobPage() {
 
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
-      <div className="fixed top-[-10%] left-[-10%] h-[320px] w-[320px] rounded-full bg-blue-50/70 blur-3xl pointer-events-none" />
-      <div className="fixed right-[-5%] top-[18%] h-[280px] w-[280px] rounded-full bg-violet-50/70 blur-3xl pointer-events-none" />
+      <div className="fixed top-[-10%] left-[-10%] h-80 w-[320px] rounded-full bg-blue-50/70 blur-3xl pointer-events-none" />
+      <div className="fixed right-[-5%] top-[18%] h-70 w-70 rounded-full bg-violet-50/70 blur-3xl pointer-events-none" />
 
       {message && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-xl">
@@ -41,7 +41,7 @@ export default function PostJobPage() {
         </div>
 
         <div className="grid gap-8 xl:grid-cols-[1.8fr_1.2fr]">
-          <form onSubmit={handleSubmit} className="space-y-8 rounded-[2rem] border border-gray-200 bg-white p-8 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.25)]">
+          <form onSubmit={handleSubmit} className="space-y-8 rounded-4xl border border-gray-200 bg-white p-8 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.25)]">
             <div className="space-y-6">
               <div className="flex flex-col gap-2">
                 <h2 className="text-xl font-bold text-gray-900">Job Information</h2>
@@ -174,7 +174,7 @@ export default function PostJobPage() {
           </form>
 
           <aside className="space-y-6">
-            <div className="rounded-[2rem] border border-gray-200 bg-slate-50 p-6 shadow-sm">
+            <div className="rounded-4xl border border-gray-200 bg-slate-50 p-6 shadow-sm">
               <div className="flex items-center gap-3 text-blue-600">
                 <Briefcase className="h-5 w-5" />
                 <span className="text-sm font-semibold uppercase tracking-[0.35em]">Quick Summary</span>
@@ -204,7 +204,7 @@ export default function PostJobPage() {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-4xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Listing Preview</h2>
