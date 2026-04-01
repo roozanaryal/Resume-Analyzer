@@ -3,7 +3,7 @@ import { Briefcase, Mail, Lock, User, ArrowRight } from "lucide-react";
 
 export default function SignupPage() {
   return (
-    <div className="relative h-screen bg-white flex items-center justify-center p-4 overflow-hidden">
+    <div className="relative min-h-screen bg-white flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
       {/* Background Decor */}
       <div className="absolute bottom-[-10%] left-[-10%] h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl" />
       <div className="absolute top-[-5%] right-[-10%] h-[280px] sm:h-[400px] w-[280px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl" />
