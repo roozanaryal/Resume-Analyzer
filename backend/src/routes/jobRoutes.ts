@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { postJob, getJob, saveJobs, getSavedJobs, deleteSavedJob } from "../controllers/jobController.js";
+import { postJob, getJob, saveJobs, getSavedJobs, deleteSavedJob, getJobs } from "../controllers/jobController.js";
 import { protectRoute } from "../middlewares/protectRoute.js";
 import { body } from "express-validator";
 
@@ -18,6 +18,9 @@ router.post(
   ],
   postJob
 );
+ 
+// Get all jobs with pagination and filtering
+router.get("/", getJobs);
 
 // Get a specific job
 router.get("/:id", getJob);

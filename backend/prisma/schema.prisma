@@ -29,6 +29,7 @@ model User {
 
   //Relations
   jobsPosted Job[] @relation("EmployerJob")
+  savedJobs  SavedJob[]
   chatRoomParticipant ChatRoomParticipant[]
   sentMessages Message[] @relation("SentMessages")
   recivedMessages Message[] @relation("ReceivedMessages")
@@ -46,8 +47,20 @@ model Job{
 
   employerId String
   employer User @relation("EmployerJob",fields: [employerId],references: [id])
+  savedBy  SavedJob[]
 
   createdAt DateTime @default(now())
+}
+
+model SavedJob {
+  id        String   @id @default(uuid())
+  userId    String
+  jobId     String
+  user      User     @relation(fields: [userId], references: [id])
+  job       Job      @relation(fields: [jobId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
 }
 
 
