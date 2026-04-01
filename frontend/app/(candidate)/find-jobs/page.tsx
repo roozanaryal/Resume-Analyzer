@@ -368,7 +368,7 @@ export default function FindJobsPage() {
                           {job.title}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-1 text-xs sm:text-sm font-semibold text-gray-400 uppercase tracking-tight line-clamp-1">
-                          <Briefcase className="h-3 w-3 flex-shrink-0" />
+                          <Briefcase className="h-3 w-3 shrink-0" />
                           {job.company}
                         </div>
                       </div>
