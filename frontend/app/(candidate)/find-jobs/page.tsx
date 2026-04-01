@@ -5,12 +5,11 @@ import {
   Search,
   MapPin,
   Briefcase,
-  Bookmark,
   ChevronDown,
   LayoutGrid,
   List,
-  Calendar,
 } from "lucide-react";
+import JobCard from "@/components/JobCard";
 
 const JOBS = [
   {
@@ -334,85 +333,19 @@ export default function FindJobsPage() {
             className={`grid gap-5 sm:gap-6 ${view === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
           >
             {filteredJobs.length > 0 ? (
-              filteredJobs.map((job) => {
-                const isSaved = savedJobs.includes(job.id);
-                const isApplied =
-                  appliedJobs.includes(job.id) || job.status === "Applied";
-                const jobStatus = isApplied ? "Applied" : job.status;
-
-                return (
-                  <div
-                    key={job.id}
-                    className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-lg transition-all group relative"
-                  >
-                    <button
-                      onClick={() => toggleSaveJob(job.id)}
-                      className="absolute top-5 sm:top-6 right-5 sm:right-6 text-gray-300 hover:text-blue-500 transition-colors cursor-pointer"
-                    >
-                      <Bookmark
-                        className="h-5 w-5"
-                        fill={isSaved ? "currentColor" : "none"}
-                      />
-                    </button>
-
-                    <div className="flex gap-3 sm:gap-4 items-start mb-5 sm:mb-6">
-                      <div className="h-12 sm:h-14 w-12 sm:w-14 rounded-2xl bg-gray-50 flex items-center justify-center border border-gray-100 overflow-hidden shadow-inner p-2">
-                        <img
-                          src={job.logo}
-                          alt={job.company}
-                          className="h-full w-full object-contain rounded-lg"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-900 text-sm sm:text-base md:text-lg group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {job.title}
-                        </h3>
-                        <div className="flex items-center gap-1.5 mt-1 text-xs sm:text-sm font-semibold text-gray-400 uppercase tracking-tight line-clamp-1">
-                          <Briefcase className="h-3 w-3 shrink-0" />
-                          {job.company}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mb-5 sm:mb-6">
-                      <span className="px-3 py-1 bg-slate-100 text-gray-600 rounded-full text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
-                        <MapPin className="h-3 w-3" />
-                        {job.location}
-                      </span>
-                      <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold whitespace-nowrap">
-                        {job.type}
-                      </span>
-                      <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold whitespace-nowrap">
-                        {job.category}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-5 sm:mb-6 uppercase tracking-wider">
-                      <Calendar className="h-3.5 w-3.5" />
-                      {job.date}
-                    </div>
-
-                    <div className="flex items-center justify-between mt-auto">
-                      <p className="text-xl sm:text-2xl font-bold text-blue-600">
-                        {job.salary}
-                      </p>
-                      <button
-                        onClick={() =>
-                          jobStatus === "Apply Now" && toggleApplyJob(job.id)
-                        }
-                        disabled={isApplied}
-                        className={`px-4 sm:px-6 py-2 rounded-xl border font-bold text-xs sm:text-sm transition-all ${
-                          isApplied
-                            ? "bg-gray-100 border-gray-100 text-gray-500 cursor-default"
-                            : "bg-white border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-lg shadow-sm active:scale-95 cursor-pointer"
-                        }`}
-                      >
-                        {jobStatus}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
+              filteredJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  isSaved={savedJobs.includes(job.id)}
+                  onSaveToggle={toggleSaveJob}
+                  onApply={toggleApplyJob}
+                  isApplied={
+                    appliedJobs.includes(job.id) || job.status === "Applied"
+                  }
+                  view={view}
+                />
+              ))
             ) : (
               <div className="col-span-full text-center py-12">
                 <p className="text-gray-500 font-semibold">
