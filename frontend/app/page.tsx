@@ -5,8 +5,8 @@ export default function Home() {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       {/* Background Decor */}
-      <div className="absolute top-[-10%] left-[-10%] h-[350px] sm:h-[500px] w-[350px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl" />
-      <div className="absolute right-[-5%] top-[20%] h-[300px] sm:h-[400px] w-[300px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl" />
+      <div className="absolute top-[-10%] left-[-10%] h-87.5 sm:h-125 w-87.5 sm:w-125 rounded-full bg-blue-50/50 blur-3xl" />
+      <div className="absolute right-[-5%] top-[20%] h-75 sm:h-100 w-75 sm:w-100 rounded-full bg-violet-50/50 blur-3xl" />
 
       {/* Navigation */}
       <nav className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:py-6 md:px-12 lg:px-24">

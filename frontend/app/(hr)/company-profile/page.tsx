@@ -41,14 +41,14 @@ export default function CompanyProfilePage() {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       {/* Background Decor */}
-      <div className="fixed top-[-10%] left-[-10%] h-[350px] sm:h-[500px] w-[350px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
-      <div className="fixed right-[-5%] top-[20%] h-[300px] sm:h-[400px] w-[300px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
+      <div className="fixed top-[-10%] left-[-10%] h-87.5 sm:h-125 w-87.5 sm:w-125 rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
+      <div className="fixed right-[-5%] top-[20%] h-75 sm:h-100 w-75 sm:w-100 rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
 
       {/* Welcome Alert */}
       {showWelcomeAlert && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center gap-3 px-6 py-3.5 bg-emerald-50 border border-emerald-200 rounded-xl shadow-lg backdrop-blur-sm">
-            <Check className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+            <Check className="h-5 w-5 text-emerald-600 shrink-0" />
             <span className="text-sm font-semibold text-emerald-700">
               Welcome! Your profile is ready to edit.
             </span>
@@ -101,7 +101,7 @@ export default function CompanyProfilePage() {
               <h3 className="text-xl font-bold text-gray-900">
                 Personal Information
               </h3>
-              <div className="bg-gradient-to-br from-blue-50/50 to-violet-50/50 p-8 rounded-2xl border border-gray-100/50">
+              <div className="bg-linear-to-br from-blue-50/50 to-violet-50/50 p-8 rounded-2xl border border-gray-100/50">
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -153,9 +153,9 @@ export default function CompanyProfilePage() {
               <h3 className="text-xl font-bold text-gray-900">
                 Company Information
               </h3>
-              <div className="bg-gradient-to-br from-indigo-50/50 to-blue-50/50 p-8 rounded-2xl border border-gray-100/50">
+              <div className="bg-linear-to-br from-indigo-50/50 to-blue-50/50 p-8 rounded-2xl border border-gray-100/50">
                 <div className="flex items-start gap-6">
-                  <div className="h-20 w-20 rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white flex-shrink-0 shadow-lg">
+                  <div className="h-20 w-20 rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white shrink-0 shadow-lg">
                     <Building2 className="h-8 w-8" />
                   </div>
                   <div className="flex-1 space-y-4">
@@ -189,7 +189,7 @@ export default function CompanyProfilePage() {
             {/* About Company */}
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-gray-900">About Company</h3>
-              <div className="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 p-8 rounded-2xl border border-gray-100/50">
+              <div className="bg-linear-to-br from-emerald-50/50 to-teal-50/50 p-8 rounded-2xl border border-gray-100/50">
                 <label className="block text-sm font-bold text-gray-700 mb-4">
                   Company Description
                 </label>

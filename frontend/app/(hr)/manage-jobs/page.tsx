@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { 
-  Search, Plus, ChevronDown, Users, Pencil, X, Trash2, ExternalLink, Briefcase, Check, AlertCircle
+  Search, Plus, ChevronDown, Users, Pencil, X, Trash2, Briefcase, Check, AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 
@@ -21,7 +21,7 @@ export default function ManageJobsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [sortBy, setSortBy] = useState<"title" | "status" | "applicants">("title");
-  const [expandedSortDropdown, setExpandedSortDropdown] = useState(false);
+  const [, setExpandedSortDropdown] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Filter jobs based on search and status
@@ -100,8 +100,8 @@ export default function ManageJobsPage() {
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       {/* Background Decor */}
-      <div className="fixed top-[-10%] left-[-10%] h-[350px] sm:h-[500px] w-[350px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
-      <div className="fixed right-[-5%] top-[20%] h-[300px] sm:h-[400px] w-[300px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
+      <div className="fixed top-[-10%] left-[-10%] h-87.5 sm:h-125 w-87.5 sm:w-125 rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
+      <div className="fixed right-[-5%] top-[20%] h-75 sm:h-100 w-75 sm:w-100 rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
 
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 md:py-4 md:px-12 lg:px-24 flex items-center justify-between">
@@ -122,9 +122,9 @@ export default function ManageJobsPage() {
             : "bg-red-50 border border-red-200 text-red-700"
         }`}>
           {message.type === "success" ? (
-            <Check className="h-5 w-5 flex-shrink-0" />
+            <Check className="h-5 w-5 shrink-0" />
           ) : (
-            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 shrink-0" />
           )}
           <span className="text-sm font-semibold">{message.text}</span>
         </div>
@@ -184,7 +184,7 @@ export default function ManageJobsPage() {
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-gradient-to-r from-blue-50/50 to-violet-50/50 border-b border-gray-100/50">
+          <div className="px-6 py-4 bg-linear-to-r from-blue-50/50 to-violet-50/50 border-b border-gray-100/50">
             <p className="text-sm font-semibold text-gray-700">Showing <span className="text-gray-900 font-bold">{sortedJobs.length}</span> of <span className="text-gray-900 font-bold">{jobs.length}</span> jobs</p>
           </div>
 
