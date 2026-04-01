@@ -18,10 +18,10 @@ export default function Home() {
         </div>
 
         <div className="hidden items-center gap-8 md:flex">
-          <Link href="/jobs" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+          <Link href="/find-jobs" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
             Find Jobs
           </Link>
-          <Link href="/employers" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+          <Link href="/manage-jobs" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
             For Employers
           </Link>
         </div>
@@ -57,7 +57,7 @@ export default function Home() {
             Find Jobs
             <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Link>
-          <Link href="/(hr)/manage-jobs" className="flex items-center justify-center rounded-2xl border-2 border-gray-200 bg-white px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
+          <Link href="/manage-jobs" className="flex items-center justify-center rounded-2xl border-2 border-gray-200 bg-white px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
             Post a Job
           </Link>
         </div>

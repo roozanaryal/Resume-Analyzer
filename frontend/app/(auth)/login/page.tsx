@@ -3,7 +3,7 @@ import { Briefcase, Mail, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="relative h-screen bg-white flex flex-col items-center justify-center py-4 px-4 overflow-hidden">
+    <div className="relative min-h-screen bg-white flex flex-col items-center justify-center py-12 px-4 overflow-x-hidden">
       {/* Background Decor */}
       <div className="absolute top-[-10%] left-[-10%] h-[350px] sm:h-[500px] w-[350px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl" />
       <div className="absolute right-[-5%] bottom-[-10%] h-[300px] sm:h-[400px] w-[300px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl" />

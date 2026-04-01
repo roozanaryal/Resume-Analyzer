@@ -45,62 +45,7 @@ export default function SavedJobsPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-white">
-      {/* Background Decor */}
-      <div className="fixed top-[-10%] left-[-10%] h-[350px] sm:h-[500px] w-[350px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
-      <div className="fixed right-[-5%] top-[20%] h-[300px] sm:h-[400px] w-[300px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
-
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 md:py-4 md:px-12 lg:px-24 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md">
-              <Briefcase className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">
-              Jagir
-            </span>
-          </Link>
-          <div className="hidden md:flex items-center gap-6">
-            <Link
-              href="/find-jobs"
-              className="text-sm font-semibold text-gray-500 hover:text-blue-600 transition-colors"
-            >
-              Find Jobs
-            </Link>
-            <Link
-              href="/saved"
-              className="text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-1"
-            >
-              Saved Jobs
-            </Link>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 sm:gap-6">
-          <div className="flex items-center gap-3 pl-4 border-l border-gray-100">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-gray-900">Mary Johnson</p>
-              <p className="text-xs font-semibold text-gray-400 leading-tight">
-                Candidate
-              </p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-blue-100 overflow-hidden ring-2 ring-white shadow-sm">
-              <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mary"
-                alt="Avatar"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer" />
-          </div>
-        </div>
-      </nav>
-
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-8 md:py-10 md:px-12 lg:px-24">
+    <>
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="space-y-2">
@@ -269,7 +214,6 @@ export default function SavedJobsPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </>
   );
 }
