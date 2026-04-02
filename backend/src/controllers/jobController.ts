@@ -102,10 +102,12 @@ export const postJob = async (
   }
 
   try {
-    // Check if user is HR
+    // Role-based access control: Only HR and ADMIN can post jobs
     const userRole = req.user?.role;
-    if (userRole !== "HR") {
-      return res.status(403).json({ message: "Access denied. Only HR can post jobs." });
+    if (userRole !== "HR" && userRole !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ message: "Access denied. Only HR or Admin can post jobs." });
     }
 
     const { title, description, location, salaryRange, type } = req.body;
@@ -320,6 +322,110 @@ export const deleteSavedJob = async (
     return res.status(200).json({ message: "Saved job removed successfully" });
   } catch (error: any) {
     console.error("Error in deleteSavedJob:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc    Get jobs posted by the logged-in HR
+ * @route   GET /api/jobs/my-jobs
+ * @access  Private (HR Only)
+ */
+export const getMyJobs = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+
+    if (userRole !== "HR" && userRole !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied. For HR/Admin only." });
+    }
+
+    const jobs = await prisma.job.findMany({
+      where: { employerId: userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.status(200).json({ success: true, jobs });
+  } catch (error: any) {
+    console.error("Error in getMyJobs:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc    Update a job post
+ * @route   PUT /api/jobs/:id
+ * @access  Private (HR Only/Admin)
+ */
+export const updateJob = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const { title, description, location, salaryRange, type } = req.body;
+
+    const job = await prisma.job.findUnique({ where: { id } });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (job.employerId !== userId && req.user?.role !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this job" });
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        location,
+        salaryRange,
+        type,
+      },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Job updated successfully", job: updatedJob });
+  } catch (error: any) {
+    console.error("Error in updateJob:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc    Delete a job post
+ * @route   DELETE /api/jobs/:id
+ * @access  Private (HR Only/Admin)
+ */
+export const deleteJob = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+
+    const job = await prisma.job.findUnique({ where: { id } });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (job.employerId !== userId && req.user?.role !== "ADMIN") {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to delete this job" });
+    }
+
+    await prisma.job.delete({ where: { id } });
+
+    return res.status(200).json({ message: "Job deleted successfully" });
+  } catch (error: any) {
+    console.error("Error in deleteJob:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
