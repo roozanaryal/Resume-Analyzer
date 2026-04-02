@@ -1,7 +1,27 @@
+"use client";
+
 import Link from "next/link";
-import { Briefcase, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Briefcase, Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { RegisterInput, RegisterSchema } from "@/features/auth/types";
+import { useRegister } from "@/features/auth/hooks";
 
 export default function SignupPage() {
+  const { mutate: registerUser, isPending, error } = useRegister();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(RegisterSchema),
+  });
+
+  const onSubmit = (data: RegisterInput) => {
+    registerUser(data);
+  };
+
   return (
     <div className="relative min-h-screen bg-white flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
       {/* Background Decor */}
@@ -16,65 +36,116 @@ export default function SignupPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg group-hover:scale-110 transition-transform">
               <Briefcase className="h-6 w-6" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-gray-900">Jagir</span>
+            <span className="text-2xl font-bold tracking-tight text-gray-900">
+              Jagir
+            </span>
           </Link>
-          <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-gray-900">Create Account</h1>
-          <p className="mt-1.5 text-gray-500 text-center text-sm sm:text-base">Join our community of professionals today</p>
+          <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-gray-900">
+            Create Account
+          </h1>
+          <p className="mt-1.5 text-gray-500 text-center text-sm sm:text-base">
+            Join our community of professionals today
+          </p>
         </div>
 
         <div className="bg-white/80 backdrop-blur-sm border border-gray-100 p-6 sm:p-8 rounded-3xl shadow-xl shadow-blue-500/5">
-          <form className="space-y-4 sm:space-y-5">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4 sm:space-y-5"
+          >
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Full Name
+              </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
+                  {...register("fullname")}
                   type="text"
                   placeholder="John Doe"
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                  required
                 />
               </div>
+              {errors.fullname && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.fullname.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
+              </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
+                  {...register("email")}
                   type="email"
                   placeholder="name@company.com"
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                  required
                 />
               </div>
+              {errors.email && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
+                  {...register("password")}
                   type="password"
                   placeholder="••••••••"
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                  required
                 />
               </div>
+              {errors.password && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
+
+            {error && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-100">
+                <p className="text-xs text-red-600">
+                  {(error as any).response?.data?.message ||
+                    "Registration failed. Please try again."}
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"
-              className="group w-full flex items-center justify-center gap-2 py-3.5 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all active:scale-95 mt-2"
+              disabled={isPending}
+              className="group w-full flex items-center justify-center gap-2 py-3.5 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all active:scale-95 mt-2 disabled:opacity-70 disabled:pointer-events-none"
             >
-              Sign Up
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              {isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Sign Up
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 
           <div className="mt-8 flex items-center gap-4">
             <div className="flex-1 h-px bg-gray-100"></div>
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Or continue with</span>
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+              Or continue with
+            </span>
             <div className="flex-1 h-px bg-gray-100"></div>
           </div>
 
@@ -84,7 +155,10 @@ export default function SignupPage() {
               className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
-                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.16-1.82 4.072-1.152 1.152-2.952 2.452-6.02 2.452-4.848 0-8.728-3.92-8.728-8.728s3.88-8.728 8.728-8.728c2.616 0 4.504 1.032 5.904 2.344l2.304-2.304C18.592 1.056 15.892 0 12.48 0 5.588 0 0 5.588 0 12.48s5.588 12.48 12.48 12.48c3.708 0 6.516-1.212 8.72-3.512 2.268-2.268 2.964-5.412 2.964-7.852 0-.748-.064-1.472-.18-2.188h-11.484z" fill="currentColor" />
+                <path
+                  d="M12.48 10.92v3.28h7.84c-.24 1.84-.908 3.16-1.82 4.072-1.152 1.152-2.952 2.452-6.02 2.452-4.848 0-8.728-3.92-8.728-8.728s3.88-8.728 8.728-8.728c2.616 0 4.504 1.032 5.904 2.344l2.304-2.304C18.592 1.056 15.892 0 12.48 0 5.588 0 0 5.588 0 12.48s5.588 12.48 12.48 12.48c3.708 0 6.516-1.212 8.72-3.512 2.268-2.268 2.964-5.412 2.964-7.852 0-.748-.064-1.472-.18-2.188h-11.484z"
+                  fill="currentColor"
+                />
               </svg>
               Google
             </button>
@@ -93,7 +167,10 @@ export default function SignupPage() {
 
         <p className="mt-5 sm:mt-6 text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-bold text-blue-600 hover:text-blue-700 transition-colors">
+          <Link
+            href="/login"
+            className="font-bold text-blue-600 hover:text-blue-700 transition-colors"
+          >
             Log in here
           </Link>
         </p>
