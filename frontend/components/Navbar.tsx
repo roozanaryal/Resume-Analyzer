@@ -68,7 +68,7 @@ export default function CandidateNavbar() {
                 Candidate
               </p>
             </div>
-            <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-white shadow-md border border-gray-50 flex-shrink-0">
+            <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-white shadow-md border border-gray-50 shrink-0">
               <img
                 src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mary"
                 alt="Avatar"
