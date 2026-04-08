@@ -1,6 +1,16 @@
-import { Briefcase, Building2, LayoutDashboard, LogOut, PlusSquare, ChevronDown } from "lucide-react";
+"use client";
+
+import {
+  Briefcase,
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  PlusSquare,
+  ChevronDown,
+} from "lucide-react";
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const SIDEBAR_LINKS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -10,6 +20,8 @@ const SIDEBAR_LINKS = [
 ];
 
 export default function HRLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <div className="min-h-screen bg-slate-50/50">
       {/* Sidebar */}
@@ -19,21 +31,30 @@ export default function HRLayout({ children }: { children: React.ReactNode }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md">
               <Briefcase className="h-5 w-5" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">Jagir</span>
+            <span className="text-lg font-bold tracking-tight text-gray-900">
+              Jagir
+            </span>
           </Link>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
-          {SIDEBAR_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <link.icon className="h-5 w-5" />
-              {link.label}
-            </Link>
-          ))}
+          {SIDEBAR_LINKS.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                  isActive
+                    ? "text-blue-600 bg-blue-50/50 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <link.icon className={`h-5 w-5 ${isActive ? "text-blue-600" : "text-gray-400"}`} />
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="p-4 mt-auto border-t border-gray-100 text-gray-400">
