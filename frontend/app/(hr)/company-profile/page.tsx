@@ -13,6 +13,9 @@ export default function CompanyProfilePage() {
     company: "NeoHire Labs",
     about:
       "NeoHire Labs is a recruitment intelligence platform that leverages machine learning to match companies with top-tier tech talent.",
+    website: "https://neohire.labs",
+    size: "201-500 employees",
+    industry: "Recruitment Intelligence",
   });
   const [editData, setEditData] = useState(companyData);
 
@@ -180,6 +183,71 @@ export default function CompanyProfilePage() {
                           {companyData.company}
                         </p>
                       )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Website
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.website}
+                            onChange={(e) =>
+                              setEditData({ ...editData, website: e.target.value })
+                            }
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900 text-sm"
+                          />
+                        ) : (
+                          <p className="text-sm font-semibold text-blue-600">
+                            {companyData.website}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Company Size
+                        </label>
+                        {isEditing ? (
+                          <select
+                            value={editData.size}
+                            onChange={(e) =>
+                              setEditData({ ...editData, size: e.target.value })
+                            }
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900 text-sm"
+                          >
+                            <option>1-10 employees</option>
+                            <option>11-50 employees</option>
+                            <option>51-200 employees</option>
+                            <option>201-500 employees</option>
+                            <option>501-1000 employees</option>
+                            <option>1000+ employees</option>
+                          </select>
+                        ) : (
+                          <p className="text-sm font-semibold text-gray-900">
+                            {companyData.size}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Industry
+                        </label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.industry}
+                            onChange={(e) =>
+                              setEditData({ ...editData, industry: e.target.value })
+                            }
+                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900 text-sm"
+                          />
+                        ) : (
+                          <p className="text-sm font-semibold text-gray-900">
+                            {companyData.industry}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

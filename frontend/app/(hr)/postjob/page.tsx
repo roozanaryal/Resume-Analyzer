@@ -13,6 +13,7 @@ export default function PostJobPage() {
   const [description, setDescription] = useState("");
   const [responsibilities, setResponsibilities] = useState("");
   const [qualifications, setQualifications] = useState("");
+  const [benefits, setBenefits] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -162,6 +163,17 @@ export default function PostJobPage() {
                   className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
                 />
               </label>
+ 
+              <label className="block">
+                <span className="text-sm font-semibold text-gray-700">Perks & Benefits</span>
+                <textarea
+                  value={benefits}
+                  onChange={(event) => setBenefits(event.target.value)}
+                  rows={3}
+                  placeholder="Competitive salary, Health insurance, Remote options..."
+                  className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
+                />
+              </label>
             </div>
 
             <button
@@ -225,6 +237,7 @@ export default function PostJobPage() {
                 <div className="space-y-3 text-sm text-gray-600">
                   <p>{description || "Write a concise description of the role, responsibilities, and team culture to help align top candidates."}</p>
                   <p className="text-gray-500">Qualifications: {qualifications || "Portfolio, UX research, design systems"}</p>
+                  <p className="text-gray-500 text-xs font-medium">Benefits: {benefits || "Flexible hours, Heathcare"}</p>
                 </div>
               </div>
             </div>

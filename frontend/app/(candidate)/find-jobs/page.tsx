@@ -10,6 +10,7 @@ import {
   List,
 } from "lucide-react";
 import JobCard from "@/components/JobCard";
+import SalaryRangeSlider from "@/components/SalaryRangeSlider";
 
 const JOBS = [
   {
@@ -76,7 +77,7 @@ export default function FindJobsPage() {
       Internship: false,
     },
   );
-  const [salaryRange, setSalaryRange] = useState({ min: "", max: "" });
+  const [salaryRange, setSalaryRange] = useState({ min: 0, max: 200 });
   const [searchQuery, setSearchQuery] = useState("front");
   const [location, setLocation] = useState("");
   const [expandedFilters, setExpandedFilters] = useState({
@@ -112,8 +113,8 @@ export default function FindJobsPage() {
             jobTypeFilters[type as keyof typeof jobTypeFilters] &&
             job.type === type,
         );
-      const minSalary = salaryRange.min ? parseInt(salaryRange.min) : 0;
-      const maxSalary = salaryRange.max ? parseInt(salaryRange.max) : Infinity;
+      const minSalary = salaryRange.min;
+      const maxSalary = salaryRange.max;
       const jobSalary = parseInt(job.salary.replace(/[^0-9]/g, ""));
       const matchesSalary = jobSalary >= minSalary && jobSalary <= maxSalary;
 
@@ -130,7 +131,7 @@ export default function FindJobsPage() {
       Contract: false,
       Internship: false,
     });
-    setSalaryRange({ min: "", max: "" });
+    setSalaryRange({ min: 0, max: 200 });
     setSearchQuery("");
     setLocation("");
     setFilteredJobs(JOBS);
@@ -267,36 +268,11 @@ export default function FindJobsPage() {
               />
             </button>
             {expandedFilters.salary && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-700 tracking-wider">
-                    MIN SALARY
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Min (k)"
-                    value={salaryRange.min}
-                    onChange={(e) =>
-                      setSalaryRange({ ...salaryRange, min: e.target.value })
-                    }
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-700 tracking-wider">
-                    MAX SALARY
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Max (k)"
-                    value={salaryRange.max}
-                    onChange={(e) =>
-                      setSalaryRange({ ...salaryRange, max: e.target.value })
-                    }
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-              </div>
+              <SalaryRangeSlider
+                min={salaryRange.min}
+                max={salaryRange.max}
+                onChange={(values) => setSalaryRange(values)}
+              />
             )}
           </div>
         </aside>
