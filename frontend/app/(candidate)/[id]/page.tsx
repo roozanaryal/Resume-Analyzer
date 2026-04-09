@@ -3,10 +3,10 @@
 import React from "react";
 import {
   ArrowLeft,
-  Briefcase,
+  //   Briefcase,
   MapPin,
-  Calendar,
-  DollarSign,
+  //   Calendar,
+  //   DollarSign,
   Clock,
   CheckCircle2,
   Building2,
@@ -53,11 +53,12 @@ const MOCK_JOB = {
     "Modern office with well-stocked kitchen",
   ],
   companyInfo: {
-    description: "TechNova Solutions is a leading innovator in cloud-native enterprise software. Founded in 2018, we've grown from a small startup to a global team of over 200 passionate builders dedicated to simplifying complex workflows.",
+    description:
+      "TechNova Solutions is a leading innovator in cloud-native enterprise software. Founded in 2018, we've grown from a small startup to a global team of over 200 passionate builders dedicated to simplifying complex workflows.",
     website: "https://technova.io",
     size: "201-500 employees",
     industry: "Enterprise Software",
-  }
+  },
 };
 
 export default function JobDetailsPage() {
@@ -96,10 +97,14 @@ export default function JobDetailsPage() {
           {/* Header Card */}
           <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 blur-3xl rounded-full -mr-16 -mt-16" />
-            
+
             <div className="flex flex-col md:flex-row md:items-start gap-6 relative z-10">
               <div className="h-20 w-20 shrink-0 rounded-2xl bg-white border border-gray-100 shadow-md p-3 flex items-center justify-center overflow-hidden">
-                <img src={job.logo} alt={job.company} className="h-full w-full object-contain" />
+                <img
+                  src={job.logo}
+                  alt={job.company}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -116,7 +121,9 @@ export default function JobDetailsPage() {
                 <div className="flex flex-wrap items-center gap-4 text-gray-500 font-medium">
                   <div className="flex items-center gap-1.5">
                     <Building2 className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-900 font-bold">{job.company}</span>
+                    <span className="text-gray-900 font-bold">
+                      {job.company}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
                     <MapPin className="h-4 w-4 text-gray-400" />
@@ -132,15 +139,21 @@ export default function JobDetailsPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-10 pt-8 border-t border-gray-50">
               <div className="bg-gray-50 p-4 rounded-2xl">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Salary Range</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                  Salary Range
+                </p>
                 <p className="text-lg font-black text-blue-600">{job.salary}</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-2xl">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Experience</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                  Experience
+                </p>
                 <p className="text-lg font-black text-gray-900">5+ Years</p>
               </div>
               <div className="bg-gray-50 p-4 rounded-2xl col-span-2 md:col-span-1">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Type</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                  Work Type
+                </p>
                 <p className="text-lg font-black text-gray-900">{job.type}</p>
               </div>
             </div>
@@ -169,7 +182,9 @@ export default function JobDetailsPage() {
                     <div className="h-6 w-6 mt-0.5 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                       <CheckCircle2 className="h-4 w-4 text-blue-600" />
                     </div>
-                    <span className="text-gray-600 font-medium leading-relaxed">{item}</span>
+                    <span className="text-gray-600 font-medium leading-relaxed">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -186,7 +201,9 @@ export default function JobDetailsPage() {
                     <div className="h-6 w-6 mt-0.5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     </div>
-                    <span className="text-gray-600 font-medium leading-relaxed">{item}</span>
+                    <span className="text-gray-600 font-medium leading-relaxed">
+                      {item}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -200,7 +217,8 @@ export default function JobDetailsPage() {
           <div className="bg-linear-to-br from-blue-600 to-indigo-700 rounded-4xl p-8 text-white shadow-xl shadow-blue-200">
             <h3 className="text-xl font-bold mb-4">Interested in this role?</h3>
             <p className="text-blue-100 mb-8 font-medium">
-              Submit your application today and our team will get back to you soon.
+              Submit your application today and our team will get back to you
+              soon.
             </p>
             <button className="w-full bg-white text-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg active:scale-95 cursor-pointer">
               Apply Now
@@ -212,20 +230,30 @@ export default function JobDetailsPage() {
 
           {/* Company Info Card */}
           <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">About Company</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-6">
+              About Company
+            </h3>
             <div className="flex items-center gap-4 mb-6">
-               <div className="h-14 w-14 shrink-0 rounded-2xl bg-gray-50 border border-gray-100 p-2 flex items-center justify-center overflow-hidden">
-                <img src={job.logo} alt={job.company} className="h-full w-full object-contain" />
+              <div className="h-14 w-14 shrink-0 rounded-2xl bg-gray-50 border border-gray-100 p-2 flex items-center justify-center overflow-hidden">
+                <img
+                  src={job.logo}
+                  alt={job.company}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div>
                 <p className="font-bold text-gray-900">{job.company}</p>
                 <div className="flex items-center gap-1 text-yellow-400">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="h-3 w-3 fill-current" />)}
-                  <span className="text-[10px] text-gray-400 font-bold ml-1">4.9 (124 reviews)</span>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <Star key={i} className="h-3 w-3 fill-current" />
+                  ))}
+                  <span className="text-[10px] text-gray-400 font-bold ml-1">
+                    4.9 (124 reviews)
+                  </span>
                 </div>
               </div>
             </div>
-            
+
             <p className="text-gray-500 font-medium text-sm leading-relaxed mb-6">
               {job.companyInfo.description}
             </p>
@@ -234,27 +262,44 @@ export default function JobDetailsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-gray-400">
                   <Globe className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Website</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Website
+                  </span>
                 </div>
-                <a href={job.companyInfo.website} target="_blank" className="text-sm font-bold text-blue-600 hover:underline"> technova.io </a>
+                <a
+                  href={job.companyInfo.website}
+                  target="_blank"
+                  className="text-sm font-bold text-blue-600 hover:underline"
+                >
+                  {" "}
+                  technova.io{" "}
+                </a>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-gray-400">
                   <Users className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Size</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Size
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-gray-900">{job.companyInfo.size}</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {job.companyInfo.size}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-gray-400">
                   <Building2 className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Industry</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                    Industry
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-gray-900">{job.companyInfo.industry}</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {job.companyInfo.industry}
+                </span>
               </div>
             </div>
           </div>
-          
+
           {/* Benefits Card */}
           <div className="bg-gray-900 rounded-4xl p-8 text-white">
             <h3 className="text-xl font-bold mb-6">Perks & Benefits</h3>
@@ -262,7 +307,9 @@ export default function JobDetailsPage() {
               {job.benefits.slice(0, 4).map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <div className="h-2 w-2 rounded-full bg-blue-400" />
-                  <span className="text-sm font-medium text-gray-300">{benefit}</span>
+                  <span className="text-sm font-medium text-gray-300">
+                    {benefit}
+                  </span>
                 </div>
               ))}
               <p className="text-blue-400 text-xs font-bold uppercase tracking-widest pt-2 cursor-pointer hover:text-blue-300">
