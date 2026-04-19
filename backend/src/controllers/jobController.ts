@@ -152,7 +152,7 @@ export const getJob = async (
   next: NextFunction,
 ) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const job = await prisma.job.findUnique({
       where: { id },
       include: {
@@ -189,7 +189,7 @@ export const saveJobs = async (
 ) => {
   try {
     const userId = req.user?.id;
-    const { jobId } = req.params;
+    const jobId = req.params.jobId as string;
 
     if (!userId) {
       return res.status(401).json({ message: "User not authenticated" });
@@ -205,7 +205,7 @@ export const saveJobs = async (
     const alreadySaved = await prisma.savedJob.findUnique({
       where: {
         userId_jobId: {
-          userId,
+          userId: userId as string,
           jobId,
         },
       },
@@ -301,7 +301,7 @@ export const deleteSavedJob = async (
 ) => {
   try {
     const userId = req.user?.id;
-    const jobId = req.params.id; // Corrected to expect jobId from param if the route is /saved/:id
+    const jobId = req.params.id as string; // Corrected to expect jobId from param if the route is /saved/:id
 
     if (!userId) {
       return res.status(401).json({ message: "User not authenticated" });
@@ -309,7 +309,7 @@ export const deleteSavedJob = async (
 
     const deleted = await prisma.savedJob.deleteMany({
       where: {
-        userId,
+        userId: userId as string,
         jobId,
       },
     });
@@ -342,7 +342,7 @@ export const getMyJobs = async (req: AuthRequest, res: Response) => {
     }
 
     const jobs = await prisma.job.findMany({
-      where: { employerId: userId },
+      where: { employerId: userId as string },
       orderBy: { createdAt: "desc" },
     });
 
@@ -362,7 +362,7 @@ export const getMyJobs = async (req: AuthRequest, res: Response) => {
  */
 export const updateJob = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user?.id;
     const { title, description, location, salaryRange, type } = req.body;
 
@@ -406,7 +406,7 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
  */
 export const deleteJob = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const userId = req.user?.id;
 
     const job = await prisma.job.findUnique({ where: { id } });
