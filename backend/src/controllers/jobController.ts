@@ -235,7 +235,6 @@ export const saveJobs = async (
 /**
  * @desc    Get all saved jobs for the user
  * @route   GET /api/jobs/saved
- * @access  Private (Candidate)
  */
 export const getSavedJobs = async (
   req: AuthRequest,
@@ -380,7 +379,8 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
     }
 
     const updatedJob = await prisma.job.update({
-      where: { id },
+      where: { id }, */
+
       data: {
         title,
         description,

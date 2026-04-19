@@ -23,13 +23,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-10 shadow-xl transition-all hover:shadow-2xl dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-zinc-50 text-zinc-900">
+      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-10 shadow-xl transition-all hover:shadow-2xl  border border-zinc-200 ">
         <div className="text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">
             Welcome Back
           </h1>
-          <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+          <p className="mt-2 text-zinc-500 ">
             Please enter your details to sign in
           </p>
         </div>
@@ -39,7 +39,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                className="block text-sm font-medium text-zinc-700 "
               >
                 Email Address
               </label>
@@ -47,11 +47,13 @@ export default function LoginPage() {
                 {...register("email")}
                 type="email"
                 id="email"
-                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10 transition-all sm:text-sm"
+                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all sm:text-sm"
                 placeholder="you@example.com"
               />
               {errors.email && (
-                <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
@@ -59,13 +61,13 @@ export default function LoginPage() {
               <div className="flex items-center justify-between">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                  className="block text-sm font-medium text-zinc-700 "
                 >
                   Password
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-500 "
                 >
                   Forgot password?
                 </Link>
@@ -74,19 +76,22 @@ export default function LoginPage() {
                 {...register("password")}
                 type="password"
                 id="password"
-                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/10 transition-all sm:text-sm"
+                className="mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-zinc-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all sm:text-sm"
                 placeholder="••••••••"
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.password.message}
+                </p>
               )}
             </div>
           </div>
 
           {(error as any) && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {(error as any).response?.data?.message || "Something went wrong. Please try again."}
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 ">
+              <p className="text-sm text-red-600 ">
+                {(error as any).response?.data?.message ||
+                  "Something went wrong. Please try again."}
               </p>
             </div>
           )}
@@ -107,11 +112,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-8 text-center text-sm text-zinc-600 ">
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400 underline-offset-4 hover:underline"
+            className="font-semibold text-blue-600 hover:text-blue-500 underline-offset-4 hover:underline"
           >
             Sign up now
           </Link>
