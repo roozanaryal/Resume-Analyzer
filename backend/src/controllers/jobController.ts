@@ -379,7 +379,7 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
     }
 
     const updatedJob = await prisma.job.update({
-      where: { id }, */
+      where: { id },
 
       data: {
         title,
