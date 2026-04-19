@@ -23,98 +23,98 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-white flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+    <div className="relative min-h-screen bg-white flex flex-col items-center justify-center py-2 sm:py-4 px-4 sm:px-6 lg:px-8 overflow-x-hidden overflow-y-auto">
       {/* Background Decor */}
-      <div className="absolute bottom-[-10%] left-[-10%] h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full bg-blue-50/50 blur-3xl" />
-      <div className="absolute top-[-5%] right-[-10%] h-[280px] sm:h-[400px] w-[280px] sm:w-[400px] rounded-full bg-violet-50/50 blur-3xl" />
+      <div className="absolute bottom-[-20%] left-[-20%] h-50 sm:h-75 w-50 sm:w-75 rounded-full bg-blue-50/50 blur-3xl" />
+      <div className="absolute top-[-10%] right-[-20%] h-45 sm:h-70 w-45 sm:w-70 rounded-full bg-violet-50/50 blur-3xl" />
 
       {/* Signup Container */}
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-5 sm:mb-6">
+        <div className="flex flex-col items-center mb-2 sm:mb-3">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg group-hover:scale-110 transition-transform">
-              <Briefcase className="h-6 w-6" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg group-hover:scale-110 transition-transform">
+              <Briefcase className="h-4 w-4" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-gray-900">
+            <span className="text-lg sm:text-xl font-bold tracking-tight text-gray-900">
               Jagir
             </span>
           </Link>
-          <h1 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-gray-900">
+          <h1 className="mt-1 sm:mt-2 text-lg sm:text-xl font-extrabold text-gray-900">
             Create Account
           </h1>
-          <p className="mt-1.5 text-gray-500 text-center text-sm sm:text-base">
+          <p className="mt-0.5 text-gray-500 text-center text-xs">
             Join our community of professionals today
           </p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm border border-gray-100 p-6 sm:p-8 rounded-3xl shadow-xl shadow-blue-500/5">
+        <div className="bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 rounded-3xl shadow-xl shadow-blue-500/5">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4 sm:space-y-5"
+            className="space-y-2.5 sm:space-y-3"
           >
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   {...register("fullname")}
                   type="text"
                   placeholder="John Doe"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
               </div>
               {errors.fullname && (
-                <p className="mt-1 text-xs text-red-500">
+                <p className="mt-0.5 text-xs text-red-500">
                   {errors.fullname.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   {...register("email")}
                   type="email"
                   placeholder="name@company.com"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-xs text-red-500">
+                <p className="mt-0.5 text-xs text-red-500">
                   {errors.email.message}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   {...register("password")}
                   type="password"
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                 />
               </div>
               {errors.password && (
-                <p className="mt-1 text-xs text-red-500">
+                <p className="mt-0.5 text-xs text-red-500">
                   {errors.password.message}
                 </p>
               )}
             </div>
 
             {error && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-100">
+              <div className="p-1.5 rounded-lg bg-red-50 border border-red-100">
                 <p className="text-xs text-red-600">
                   {(error as any).response?.data?.message ||
                     "Registration failed. Please try again."}
@@ -125,7 +125,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="group w-full flex items-center justify-center gap-2 py-3.5 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold rounded-xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all active:scale-95 mt-2 disabled:opacity-70 disabled:pointer-events-none"
+              className="group w-full flex items-center justify-center gap-2 py-2 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none mt-1"
             >
               {isPending ? (
                 <>
@@ -141,18 +141,18 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-3 flex items-center gap-2">
             <div className="flex-1 h-px bg-gray-100"></div>
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-              Or continue with
+              Or continue
             </span>
             <div className="flex-1 h-px bg-gray-100"></div>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-3">
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-200 rounded-xl bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-200 rounded-xl bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
@@ -165,13 +165,13 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <p className="mt-5 sm:mt-6 text-center text-sm text-gray-500">
+        <p className="mt-2.5 text-center text-xs text-gray-500">
           Already have an account?{" "}
           <Link
             href="/login"
             className="font-bold text-blue-600 hover:text-blue-700 transition-colors"
           >
-            Log in here
+            Log in
           </Link>
         </p>
       </div>
