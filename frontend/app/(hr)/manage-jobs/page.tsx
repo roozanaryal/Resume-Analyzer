@@ -250,10 +250,20 @@ export default function ManageJobsPage() {
                         </span>
                       </td>
                       <td className="px-8 py-6 text-center">
-                        <div className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg ring-1 ring-blue-200">
-                          <Users className="h-4 w-4" />
-                          {job.applicants}
-                        </div>
+                        {job.applicants > 0 ? (
+                          <Link
+                            href={`/manage-jobs/${job.id}/applicants`}
+                            className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg ring-1 ring-blue-200 hover:bg-blue-100 hover:scale-105 transition-all cursor-pointer"
+                          >
+                            <Users className="h-4 w-4" />
+                            {job.applicants} {"View"}
+                          </Link>
+                        ) : (
+                          <div className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg ring-1 ring-gray-200">
+                            <Users className="h-4 w-4" />
+                            {job.applicants}
+                          </div>
+                        )}
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center justify-center gap-2">

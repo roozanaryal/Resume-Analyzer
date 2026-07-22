@@ -1,14 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Search,
-  MapPin,
-  Briefcase,
-  ChevronDown,
-  LayoutGrid,
-  List,
-} from "lucide-react";
+import { useState } from "react";
+import { Search, MapPin, ChevronDown, LayoutGrid, List } from "lucide-react";
 import JobCard from "@/components/JobCard";
 import SalaryRangeSlider from "@/components/SalaryRangeSlider";
 

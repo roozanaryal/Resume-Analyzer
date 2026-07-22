@@ -39,7 +39,7 @@ export default function HRLayout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 px-4 space-y-1">
           {SIDEBAR_LINKS.map((link) => {
-            const isActive = pathname === link.href;
+            const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(`${link.href}/`));
             return (
               <Link
                 key={link.label}

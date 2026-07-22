@@ -15,6 +15,9 @@ import {
   Star,
   Share2,
   Bookmark,
+  Upload,
+  FileText,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -64,6 +67,14 @@ const MOCK_JOB = {
 export default function JobDetailsPage() {
   const params = useParams();
   const id = params.id;
+  const [resume, setResume] = React.useState<File | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setResume(e.target.files[0]);
+    }
+  };
 
   // In a real app, we would fetch job by ID here
   const job = MOCK_JOB;
@@ -216,11 +227,60 @@ export default function JobDetailsPage() {
           {/* Quick Apply Card */}
           <div className="bg-linear-to-br from-blue-600 to-indigo-700 rounded-4xl p-8 text-white shadow-xl shadow-blue-200">
             <h3 className="text-xl font-bold mb-4">Interested in this role?</h3>
-            <p className="text-blue-100 mb-8 font-medium">
+            <p className="text-blue-100 mb-6 font-medium">
               Submit your application today and our team will get back to you
               soon.
             </p>
-            <button className="w-full bg-white text-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg active:scale-95 cursor-pointer">
+
+            {/* Resume Upload Section */}
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-blue-100 mb-3 uppercase tracking-wider">
+                Your Resume
+              </label>
+              
+              {!resume ? (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-blue-400/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 hover:border-white transition-all group"
+                >
+                  <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Upload className="h-6 w-6 text-white" />
+                  </div>
+                  <p className="text-sm font-bold text-white mb-1">Click to upload</p>
+                  <p className="text-xs text-blue-200 font-medium">PDF, DOC, DOCX (Max. 5MB)</p>
+                </div>
+              ) : (
+                <div className="w-full bg-white/10 rounded-2xl p-4 flex items-center justify-between border border-white/20">
+                  <div className="flex items-center gap-4 overflow-hidden">
+                    <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-500 flex items-center justify-center">
+                      <FileText className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="overflow-hidden">
+                      <p className="text-sm font-bold text-white truncate">{resume.name}</p>
+                      <p className="text-xs text-blue-200 font-medium mt-0.5">
+                        {(resume.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setResume(null)}
+                    className="h-8 w-8 shrink-0 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors text-blue-200 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                accept=".pdf,.doc,.docx" 
+                className="hidden" 
+              />
+            </div>
+
+            <button className="w-full bg-white text-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg active:scale-95 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
               Apply Now
             </button>
             <p className="text-center text-xs text-blue-200 mt-4 font-bold uppercase tracking-wider">
