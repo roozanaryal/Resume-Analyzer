@@ -138,8 +138,8 @@ export default function ApplicantsPage() {
                   onClick={() => setStatusFilter(status)}
                   className={`px-5 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
                     statusFilter === status 
-                      ? "bg-blue-50 text-blue-600 border border-blue-200" 
-                      : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                      ? "bg-blue-600 text-white border border-blue-600 shadow-sm" 
+                      : "bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200"
                   }`}
                 >
                   {status}
@@ -219,7 +219,7 @@ export default function ApplicantsPage() {
                     <FileText className="h-4 w-4" />
                     Resume
                   </button>
-                  <button className="flex-1 bg-linear-to-r from-gray-800 to-gray-900 text-white font-bold py-3 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all text-sm shadow-md cursor-pointer active:scale-95">
+                  <button className="flex-1 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold py-3 rounded-xl hover:shadow-xl transition-all text-sm shadow-md cursor-pointer active:scale-95">
                     Review
                   </button>
                 </div>
