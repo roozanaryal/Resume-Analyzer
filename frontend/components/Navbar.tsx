@@ -1,12 +1,15 @@
 "use client";
 
 import React from "react";
-import { Briefcase, Bookmark, ChevronDown } from "lucide-react";
+import { Briefcase, Bookmark, LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUser, useLogout } from "@/features/auth/hooks";
 
 export default function CandidateNavbar() {
   const pathname = usePathname();
+  const { data: user } = useUser();
+  const { mutate: logout } = useLogout();
 
   const navLinks = [
     { label: "Find Jobs", href: "/find-jobs" },
@@ -62,20 +65,22 @@ export default function CandidateNavbar() {
           <div className="flex items-center gap-3 pl-4 border-l border-gray-100 h-10">
             <div className="text-right hidden sm:block ml-2">
               <p className="text-sm font-bold text-gray-900 tracking-tight leading-none mb-0.5">
-                Mary Johnson
+                {user?.name || "User"}
               </p>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                Candidate
+                {user?.role || "Candidate"}
               </p>
             </div>
-            <div className="h-10 w-10 rounded-full overflow-hidden ring-2 ring-white shadow-md border border-gray-50 shrink-0">
-              <img
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mary"
-                alt="Avatar"
-                className="h-full w-full object-cover"
-              />
+            <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+              <UserIcon className="h-5 w-5" />
             </div>
-            <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors" />
+            <button
+              onClick={() => logout()}
+              title="Logout"
+              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </nav>

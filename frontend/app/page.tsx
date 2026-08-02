@@ -1,7 +1,23 @@
-import { Search, Briefcase, Users, Building2, TrendingUp, ChevronRight } from "lucide-react";
+"use client";
+
+import { Search, Briefcase, Users, Building2, TrendingUp, ChevronRight, LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUser, useLogout } from "@/features/auth/hooks";
 
 export default function Home() {
+  const { data: user, isLoading } = useUser();
+  const { mutate: logout } = useLogout();
+  const router = useRouter();
+
+  const handleProtectedNavigate = (targetPath: string) => {
+    if (!user) {
+      router.push("/login");
+    } else {
+      router.push(targetPath);
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
       {/* Background Decor */}
@@ -18,24 +34,50 @@ export default function Home() {
         </div>
 
         <div className="hidden items-center gap-8 md:flex">
-          <Link href="/find-jobs" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+          <button
+            onClick={() => handleProtectedNavigate("/find-jobs")}
+            className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+          >
             Find Jobs
-          </Link>
-          <Link href="/manage-jobs" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+          </button>
+          <button
+            onClick={() => handleProtectedNavigate("/manage-jobs")}
+            className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors cursor-pointer"
+          >
             For Employers
-          </Link>
+          </button>
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6">
-          <Link href="/login" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
-            Login
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-xl bg-linear-to-r from-blue-600 to-violet-600 px-5 sm:px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
-          >
-            Sign Up
-          </Link>
+          {isLoading ? (
+            <div className="h-8 w-20 bg-gray-100 animate-pulse rounded-lg" />
+          ) : user ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-xl">
+                <UserIcon className="h-4 w-4 text-blue-600" />
+                <span className="text-xs font-semibold text-gray-700">{user.name || user.email}</span>
+              </div>
+              <button
+                onClick={() => logout()}
+                className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-red-600 transition-colors cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-xl bg-linear-to-r from-blue-600 to-violet-600 px-5 sm:px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </nav>
 
@@ -52,14 +94,20 @@ export default function Home() {
         </p>
 
         <div className="mt-10 sm:mt-12 md:mt-14 flex flex-col gap-3 sm:gap-4 sm:flex-row">
-          <Link href="/find-jobs" className="group flex items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all active:scale-95">
+          <button
+            onClick={() => handleProtectedNavigate("/find-jobs")}
+            className="group flex items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-white shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all active:scale-95 cursor-pointer"
+          >
             <Search className="h-5 w-5" />
             Find Jobs
             <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-          <Link href="/manage-jobs" className="flex items-center justify-center rounded-2xl border-2 border-gray-200 bg-white px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
+          </button>
+          <button
+            onClick={() => handleProtectedNavigate("/manage-jobs")}
+            className="flex items-center justify-center rounded-2xl border-2 border-gray-200 bg-white px-8 py-3.5 sm:py-4 text-base sm:text-lg font-bold text-gray-700 shadow-sm hover:border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95 cursor-pointer"
+          >
             Post a Job
-          </Link>
+          </button>
         </div>
 
         {/* Stats Section */}

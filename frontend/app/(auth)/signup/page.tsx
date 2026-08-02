@@ -117,6 +117,7 @@ export default function SignupPage() {
               <div className="p-1.5 rounded-lg bg-red-50 border border-red-100">
                 <p className="text-xs text-red-600">
                   {(error as any).response?.data?.message ||
+                    (error as any).response?.data?.errors?.[0]?.msg ||
                     "Registration failed. Please try again."}
                 </p>
               </div>

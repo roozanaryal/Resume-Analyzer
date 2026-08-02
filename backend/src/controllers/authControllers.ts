@@ -9,6 +9,7 @@ export const registerUser = async (
   res: Response,
   next: NextFunction,
 ) => {
+  console.log(req.body);
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
@@ -87,11 +88,18 @@ export const loginUser = async (
   return res.status(200).json({ user: userWithoutPassword, token });
 };
 
+export const getMe = async (req: Request & { user?: any }, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  return res.status(200).json({ user: req.user });
+};
+
 export const logoutUser = (req: Request, res: Response) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV !== "development",
-    sameSite: "strict",
+    sameSite: "lax",
   });
 
   return res.status(200).json({

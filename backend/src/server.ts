@@ -1,5 +1,5 @@
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
 import { connectDB, disconnect } from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
@@ -8,8 +8,6 @@ import jobRoutes from "./routes/jobRoutes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-dotenv.config();
-
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -17,9 +15,12 @@ const PORT = process.env.PORT || 3000;
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",
       "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:5173",
       "http://localhost:5174",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
       "http://127.0.0.1:5173",
       "http://127.0.0.1:5174",
     ],
