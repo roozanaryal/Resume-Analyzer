@@ -348,6 +348,11 @@ export const getMyJobs = async (req: AuthRequest, res: Response) => {
     const jobs = await prisma.job.findMany({
       where: { employerId: userId as string },
       orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: { applications: true },
+        },
+      },
     });
 
     return res.status(200).json({ success: true, jobs });
@@ -627,6 +632,111 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     console.error("Error in getDashboardStats:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc    Get all applicants for a specific job (HR only)
+ * @route   GET /api/jobs/:id/applicants
+ * @access  Private (HR Only)
+ */
+export const getJobApplicants = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const jobId = req.params.id as string;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { employerId: true, title: true },
+    });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (job.employerId !== userId && req.user?.role !== "ADMIN") {
+      return res.status(403).json({ message: "Not authorized to view applicants for this job" });
+    }
+
+    const applications = await prisma.application.findMany({
+      where: { jobId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            bio: true,
+            resumeURL: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      jobTitle: job.title,
+      applications: applications.map((app) => ({
+        id: app.id,
+        userId: app.userId,
+        name: app.user.name,
+        email: app.user.email,
+        bio: app.user.bio,
+        resumeURL: app.resumeURL || app.user.resumeURL,
+        status: app.status,
+        createdAt: app.createdAt,
+      })),
+    });
+  } catch (error: any) {
+    console.error("Error in getJobApplicants:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc    Update application status (HR only)
+ * @route   PUT /api/jobs/application/:applicationId/status
+ * @access  Private (HR Only)
+ */
+export const updateApplicationStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const applicationId = req.params.applicationId as string;
+    const { status } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { job: true },
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.job.employerId !== userId && req.user?.role !== "ADMIN") {
+      return res.status(403).json({ message: "Not authorized to update this application" });
+    }
+
+    const updated = await prisma.application.update({
+      where: { id: applicationId },
+      data: { status },
+    });
+
+    return res.status(200).json({
+      message: "Application status updated successfully",
+      application: updated,
+    });
+  } catch (error: any) {
+    console.error("Error in updateApplicationStatus:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

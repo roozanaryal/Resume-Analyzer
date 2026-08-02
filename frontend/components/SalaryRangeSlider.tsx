@@ -20,7 +20,7 @@ const SalaryRangeSlider = ({
   min,
   max,
   minLimit = 0,
-  maxLimit = 500,
+  maxLimit = 100,
   onChange,
 }: SalaryRangeSliderProps) => {
   const [minVal, setMinVal] = useState(min);
@@ -92,7 +92,7 @@ const SalaryRangeSlider = ({
           max={maxLimit}
           value={minVal}
           onChange={(event) => handleMinChange(Number(event.target.value))}
-          className={cn("thumb thumb--left", minVal > maxLimit - 100 && "z-30")}
+          className={cn("thumb thumb--left", minVal > maxLimit - 20 && "z-30")}
         />
         <input
           type="range"

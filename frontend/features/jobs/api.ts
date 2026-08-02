@@ -69,3 +69,32 @@ export const getDashboardStats = async () => {
   const response = await api.get("/jobs/dashboard-stats");
   return response.data;
 };
+
+export const updateJob = async ({
+  id,
+  data,
+}: {
+  id: string;
+  data: Partial<PostJobInput>;
+}) => {
+  const response = await api.put(`/jobs/${id}`, data);
+  return response.data;
+};
+
+export const getJobApplicants = async (jobId: string) => {
+  const response = await api.get(`/jobs/${jobId}/applicants`);
+  return response.data;
+};
+
+export const updateApplicationStatus = async ({
+  applicationId,
+  status,
+}: {
+  applicationId: string;
+  status: string;
+}) => {
+  const response = await api.put(`/jobs/application/${applicationId}/status`, {
+    status,
+  });
+  return response.data;
+};

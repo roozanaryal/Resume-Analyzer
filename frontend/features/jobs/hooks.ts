@@ -103,3 +103,42 @@ export const useDashboardStats = () => {
     queryFn: jobsApi.getDashboardStats,
   });
 };
+
+export const useUpdateJob = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<PostJobInput> }) =>
+      jobsApi.updateJob({ id, data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+  });
+};
+
+export const useJobApplicants = (jobId: string) => {
+  return useQuery({
+    queryKey: ["job-applicants", jobId],
+    queryFn: () => jobsApi.getJobApplicants(jobId),
+    enabled: !!jobId,
+  });
+};
+
+export const useUpdateApplicationStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      applicationId,
+      status,
+    }: {
+      applicationId: string;
+      status: string;
+    }) => jobsApi.updateApplicationStatus({ applicationId, status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["job-applicants"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
+  });
+};

@@ -12,6 +12,8 @@ import {
   applyToJob,
   getJobApplicationStatus,
   getDashboardStats,
+  getJobApplicants,
+  updateApplicationStatus,
 } from "../controllers/jobController.js";
 import { protectRoute } from "../middlewares/protectRoute.js";
 import { uploadResume } from "../middlewares/upload.js";
@@ -54,9 +56,11 @@ router.delete("/saved/:id", protectRoute, deleteSavedJob);
 // Job Application routes (Move /apply before /:id)
 router.get("/apply/status/:jobId", protectRoute, getJobApplicationStatus);
 router.post("/apply/:jobId", protectRoute, uploadResume.single("resume"), applyToJob);
+router.put("/application/:applicationId/status", protectRoute, updateApplicationStatus);
 
 // Parameterized job routes (Specific job actions)
 router.get("/:id", getJob);
+router.get("/:id/applicants", protectRoute, getJobApplicants);
 router.put("/:id", protectRoute, updateJob);
 router.delete("/:id", protectRoute, deleteJob);
 

@@ -21,10 +21,10 @@ export default function FindJobsPage() {
     Internship: false,
   });
 
-  const [salaryRange, setSalaryRange] = useState({ min: 0, max: 200 });
+  const [salaryRange, setSalaryRange] = useState({ min: 0, max: 100 });
   const [expandedFilters, setExpandedFilters] = useState({
     jobType: true,
-    salary: false,
+    salary: true,
   });
 
   // Calculate selected types for backend query
@@ -91,7 +91,26 @@ export default function FindJobsPage() {
           job.type.toLowerCase() === type.toLowerCase()
       );
 
-    return matchesTitle && matchesLocation && matchesType;
+    const matchesSalary = (() => {
+      if (salaryRange.min === 0 && salaryRange.max === 100) return true;
+      if (!job.salary || job.salary.toLowerCase() === "competitive") return true;
+
+      const matches = job.salary.match(/\d+[\d,.]*/g);
+      if (!matches || matches.length === 0) return true;
+
+      const nums = matches.map((m) => {
+        let n = parseFloat(m.replace(/,/g, ""));
+        if (n >= 1000) n = Math.round(n / 1000);
+        return n;
+      });
+
+      const jobMin = Math.min(...nums);
+      const jobMax = Math.max(...nums);
+
+      return jobMax >= salaryRange.min && jobMin <= salaryRange.max;
+    })();
+
+    return matchesTitle && matchesLocation && matchesType && matchesSalary;
   });
 
   const toggleSaveJob = (id: string | number) => {
@@ -113,7 +132,7 @@ export default function FindJobsPage() {
       Contract: false,
       Internship: false,
     });
-    setSalaryRange({ min: 0, max: 200 });
+    setSalaryRange({ min: 0, max: 100 });
     setSearchQuery("");
     setLocation("");
   };
@@ -252,6 +271,8 @@ export default function FindJobsPage() {
               <SalaryRangeSlider
                 min={salaryRange.min}
                 max={salaryRange.max}
+                minLimit={0}
+                maxLimit={100}
                 onChange={(values) => setSalaryRange(values)}
               />
             )}

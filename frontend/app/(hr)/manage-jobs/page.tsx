@@ -2,323 +2,420 @@
 
 import React, { useState } from "react";
 import { 
-  Search, Plus, ChevronDown, Users, Pencil, X, Trash2, Briefcase, Check, AlertCircle
+  Search, Plus, ChevronDown, Users, Pencil, X, Trash2, Briefcase, Check, AlertCircle, Loader2
 } from "lucide-react";
 import Link from "next/link";
-
-const INITIAL_JOBS_DATA = [
-  { id: 1, title: "DevOps Engineer", manager: "John Davis", status: "Active", applicants: 4 },
-  { id: 2, title: "Financial Analyst", manager: "John Davis", status: "Active", applicants: 3 },
-  { id: 3, title: "Front-End Developer", manager: "John Davis", status: "Active", applicants: 0 },
-  { id: 4, title: "Sales Manager", manager: "John Davis", status: "Active", applicants: 4 },
-];
+import { useMyJobs, useDeleteJob, useUpdateJob } from "@/features/jobs/hooks";
 
 export default function ManageJobsPage() {
-  const [jobs, setJobs] = useState(INITIAL_JOBS_DATA);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Status");
-  const [expandedStatusDropdown, setExpandedStatusDropdown] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [sortBy, setSortBy] = useState<"title" | "status" | "applicants">("title");
-  const [, setExpandedSortDropdown] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const { data, isLoading, isError } = useMyJobs();
+  const deleteJobMutation = useDeleteJob();
+  const updateJobMutation = useUpdateJob();
 
-  // Filter jobs based on search and status
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "All Status" || job.status === statusFilter;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+
+  // State for Edit Job modal
+  const [editingJob, setEditingJob] = useState<any | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editSalaryRange, setEditSalaryRange] = useState("");
+  const [editType, setEditType] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // State for Delete confirmation modal
+  const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
+
+  const rawJobs = Array.isArray(data) ? data : (data as any)?.jobs || [];
+
+  const jobsList = rawJobs.map((j: any) => ({
+    id: j.id,
+    title: j.title,
+    location: j.location,
+    salaryRange: j.salaryRange || "Competitive",
+    type: j.type || "Full-Time",
+    description: j.description,
+    status: "Active",
+    applicants: j._count?.applications ?? 0,
+    createdAt: j.createdAt
+      ? new Date(j.createdAt).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "Recently",
+  }));
+
+  const filteredJobs = jobsList.filter((job: any) => {
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      statusFilter === "All" ||
+      (statusFilter === "Active" && job.status === "Active");
     return matchesSearch && matchesStatus;
   });
 
-  // Sort jobs
-  const sortedJobs = [...filteredJobs].sort((a, b) => {
-    if (sortBy === "title") {
-      return a.title.localeCompare(b.title);
-    } else if (sortBy === "status") {
-      return a.status.localeCompare(b.status);
-    } else {
-      return b.applicants - a.applicants;
-    }
-  });
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleStatusFilter = (status: string) => {
-    setStatusFilter(status);
-    setExpandedStatusDropdown(false);
-  };
-
-  const handleSortChange = (field: "title" | "status" | "applicants") => {
-    setSortBy(field);
-    setExpandedSortDropdown(false);
-  };
-
-  const handleAddNewJob = () => {
-    setMessage({ type: "success", text: "Redirect to job creation form (feature coming soon)" });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  const handleEditStart = (job: typeof INITIAL_JOBS_DATA[0]) => {
-    setEditingId(job.id);
+  const openEditModal = (job: any) => {
+    setEditingJob(job);
     setEditTitle(job.title);
+    setEditLocation(job.location);
+    setEditSalaryRange(job.salaryRange);
+    setEditType(job.type);
+    setEditDescription(job.description);
   };
 
-  const handleEditSave = (id: number) => {
-    setJobs(jobs.map(job => 
-      job.id === id ? { ...job, title: editTitle } : job
-    ));
-    setEditingId(null);
-    setMessage({ type: "success", text: `Job title updated successfully` });
-    setTimeout(() => setMessage(null), 3000);
+  const handleUpdateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingJob) return;
+
+    setIsUpdating(true);
+    try {
+      await updateJobMutation.mutateAsync({
+        id: editingJob.id,
+        data: {
+          title: editTitle,
+          location: editLocation,
+          salaryRange: editSalaryRange,
+          type: editType,
+          description: editDescription,
+        },
+      });
+      setEditingJob(null);
+    } catch (err: any) {
+      alert("Failed to update job: " + (err?.response?.data?.message || err.message));
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleEditCancel = () => {
-    setEditingId(null);
-    setEditTitle("");
+  const handleDeleteJob = async (id: string) => {
+    try {
+      await deleteJobMutation.mutateAsync(id);
+      setDeletingJobId(null);
+    } catch (err: any) {
+      alert("Failed to delete job: " + (err?.response?.data?.message || err.message));
+    }
   };
 
-  const handleCloseJob = (id: number) => {
-    setJobs(jobs.map(job => 
-      job.id === id ? { ...job, status: job.status === "Closed" ? "Active" : "Closed" } : job
-    ));
-    const job = jobs.find(j => j.id === id);
-    const newStatus = job?.status === "Closed" ? "Active" : "Closed";
-    setMessage({ type: "success", text: `Job marked as ${newStatus}` });
-    setTimeout(() => setMessage(null), 3000);
-  };
-
-  const handleDeleteJob = (id: number) => {
-    const deletedJob = jobs.find(j => j.id === id);
-    setJobs(jobs.filter(job => job.id !== id));
-    setMessage({ type: "error", text: `"${deletedJob?.title}" has been deleted` });
-    setTimeout(() => setMessage(null), 3000);
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500 font-medium">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span>Loading your jobs...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-white overflow-hidden pb-20">
       {/* Background Decor */}
       <div className="fixed top-[-10%] left-[-10%] h-87.5 sm:h-125 w-87.5 sm:w-125 rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
       <div className="fixed right-[-5%] top-[20%] h-75 sm:h-100 w-75 sm:w-100 rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
 
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-3 md:py-4 md:px-12 lg:px-24 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md">
-            <Briefcase className="h-5 w-5" />
-          </div>
-          <span className="text-lg font-bold tracking-tight text-gray-900">Jagir</span>
-        </Link>
-        <div className="text-sm font-semibold text-gray-600">Manage Jobs</div>
-      </nav>
-
-      {/* Message Toast */}
-      {message && (
-        <div className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-6 py-3 rounded-xl shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-top-2 ${
-          message.type === "success" 
-            ? "bg-emerald-50 border border-emerald-200 text-emerald-700" 
-            : "bg-red-50 border border-red-200 text-red-700"
-        }`}>
-          {message.type === "success" ? (
-            <Check className="h-5 w-5 shrink-0" />
-          ) : (
-            <AlertCircle className="h-5 w-5 shrink-0" />
-          )}
-          <span className="text-sm font-semibold">{message.text}</span>
-        </div>
-      )}
-
       <div className="relative z-10 mx-auto px-6 py-12 md:py-16 md:px-12 lg:px-24">
+        {/* Main Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Job Management</h1>
-            <p className="text-base md:text-lg text-gray-600 mt-2">Manage your job postings and track applications</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Manage Jobs</h1>
+            <p className="text-base md:text-lg text-gray-600 mt-2">View, edit, and track applicants for all your posted listings</p>
           </div>
-          <button 
-            onClick={handleAddNewJob}
-            className="flex items-center gap-2 px-6 py-3 md:px-8 md:py-3.5 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 whitespace-nowrap">
+          <Link
+            href="/postjob"
+            className="flex items-center justify-center gap-2 px-6 py-3.5 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 text-sm"
+          >
             <Plus className="h-5 w-5" />
-            Add New Job
-          </button>
+            Post New Job
+          </Link>
         </div>
 
+        {/* Content Container */}
         <div className="rounded-2xl shadow-xl shadow-blue-500/5 border border-gray-200 overflow-hidden backdrop-blur-sm bg-white/98">
-          {/* Search and Filter */}
+          {/* Search & Filter Bar */}
           <div className="p-6 border-b border-gray-100/50 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full max-w-xl group">
+            <div className="relative w-full max-w-md group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
               <input 
                 type="text" 
-                placeholder="Search jobs..." 
+                placeholder="Search job title or location..." 
                 value={searchQuery}
-                onChange={handleSearch}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none"
               />
             </div>
-            <div className="relative w-full md:w-auto">
-              <button 
-                onClick={() => setExpandedStatusDropdown(!expandedStatusDropdown)}
-                className="w-full md:w-auto flex items-center justify-between gap-10 px-5 py-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">
-                {statusFilter}
-                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${expandedStatusDropdown ? "rotate-180" : ""}`} />
-              </button>
-              {expandedStatusDropdown && (
-                <div className="absolute top-full mt-2 right-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20">
-                  {["All Status", "Active", "Closed"].map(status => (
-                    <button
-                      key={status}
-                      onClick={() => handleStatusFilter(status)}
-                      className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors ${
-                        statusFilter === status
-                          ? "bg-blue-50 text-blue-600"
-                          : "text-gray-700 hover:bg-gray-50"
-                      } first:rounded-t-lg last:rounded-b-lg`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              )}
+            
+            <div className="flex gap-2 w-full md:w-auto">
+              {["All", "Active"].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-5 py-3 rounded-xl text-sm font-bold transition-all ${
+                    statusFilter === status 
+                      ? "bg-blue-600 text-white border border-blue-600 shadow-sm" 
+                      : "bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:text-blue-700"
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="px-6 py-4 bg-linear-to-r from-blue-50/50 to-violet-50/50 border-b border-gray-100/50">
-            <p className="text-sm font-semibold text-gray-700">Showing <span className="text-gray-900 font-bold">{sortedJobs.length}</span> of <span className="text-gray-900 font-bold">{jobs.length}</span> jobs</p>
+            <p className="text-sm font-semibold text-gray-700">
+              Showing <span className="text-gray-900 font-bold">{filteredJobs.length}</span> of <span className="text-gray-900 font-bold">{jobsList.length}</span> total jobs
+            </p>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            {sortedJobs.length === 0 ? (
-              <div className="p-12 text-center">
-                <p className="text-gray-500 font-semibold">No jobs found matching your criteria</p>
-              </div>
-            ) : (
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-gray-100/50 text-[11px] font-bold text-gray-500 uppercase tracking-widest bg-gray-50/50">
-                    <th className="px-8 py-5">
-                      <button 
-                        onClick={() => handleSortChange("title")}
-                        className="flex items-center gap-1 cursor-pointer hover:text-gray-700 transition-colors">
-                        Job Title <ChevronDown className={`h-3 w-3 transition-transform ${sortBy === "title" ? "rotate-180" : ""}`} />
-                      </button>
-                    </th>
-                    <th className="px-8 py-5 text-center">
-                      <button 
-                        onClick={() => handleSortChange("status")}
-                        className="flex items-center justify-center gap-1 cursor-pointer hover:text-gray-700 transition-colors">
-                        Status <ChevronDown className={`h-3 w-3 transition-transform ${sortBy === "status" ? "rotate-180" : ""}`} />
-                      </button>
-                    </th>
-                    <th className="px-8 py-5 text-center">
-                      <button 
-                        onClick={() => handleSortChange("applicants")}
-                        className="flex items-center justify-center gap-1 cursor-pointer hover:text-gray-700 transition-colors">
-                        Applicants <ChevronDown className={`h-3 w-3 transition-transform ${sortBy === "applicants" ? "rotate-180" : ""}`} />
-                      </button>
-                    </th>
-                    <th className="px-8 py-5 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100/50">
-                  {sortedJobs.map((job) => (
-                    <tr key={job.id} className="group hover:bg-blue-50/30 transition-colors">
-                      <td className="px-8 py-6">
-                        <div>
-                          {editingId === job.id ? (
-                            <input
-                              type="text"
-                              value={editTitle}
-                              onChange={(e) => setEditTitle(e.target.value)}
-                              className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                            />
-                          ) : (
-                            <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{job.title}</p>
-                          )}
-                          <p className="text-xs font-semibold text-gray-500 mt-0.5">{job.manager}</p>
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/30">
+                  <th className="py-5 px-8 text-xs font-bold text-gray-400 uppercase tracking-wider">Job Title</th>
+                  <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider">Location</th>
+                  <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Applicants</th>
+                  <th className="py-5 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Status</th>
+                  <th className="py-5 px-8 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredJobs.length > 0 ? (
+                  filteredJobs.map((job: any) => (
+                    <tr key={job.id} className="hover:bg-blue-50/20 transition-colors group">
+                      <td className="py-5 px-8">
+                        <div className="font-bold text-gray-900 text-base group-hover:text-blue-600 transition-colors">
+                          {job.title}
+                        </div>
+                        <div className="text-xs font-medium text-gray-500 mt-1">
+                          Posted on {job.createdAt} • {job.type}
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-center">
-                        <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-bold ring-1 transition-all ${
-                          job.status === "Active"
-                            ? "bg-emerald-50 text-emerald-700 ring-emerald-200 hover:ring-emerald-300"
-                            : "bg-red-50 text-red-700 ring-red-200 hover:ring-red-300"
-                        }`}>
-                          {job.status}
+                      <td className="py-5 px-6">
+                        <span className="text-sm font-semibold text-gray-700">{job.location}</span>
+                      </td>
+                      <td className="py-5 px-6 text-center">
+                        <Link
+                          href={`/manage-jobs/${job.id}/applicants`}
+                          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer"
+                        >
+                          <Users className="h-3.5 w-3.5" />
+                          {job.applicants} Applicants
+                        </Link>
+                      </td>
+                      <td className="py-5 px-6 text-center">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Active
                         </span>
                       </td>
-                      <td className="px-8 py-6 text-center">
-                        {job.applicants > 0 ? (
-                          <Link
-                            href={`/manage-jobs/${job.id}/applicants`}
-                            className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg ring-1 ring-blue-200 hover:bg-blue-100 hover:scale-105 transition-all cursor-pointer"
+                      <td className="py-5 px-8 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openEditModal(job)}
+                            className="p-2 rounded-xl text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                            title="Edit Job"
                           >
-                            <Users className="h-4 w-4" />
-                            {job.applicants} {"View"}
-                          </Link>
-                        ) : (
-                          <div className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg ring-1 ring-gray-200">
-                            <Users className="h-4 w-4" />
-                            {job.applicants}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-2">
-                          {editingId === job.id ? (
-                            <>
-                              <button 
-                                onClick={() => handleEditSave(job.id)}
-                                className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                title="Save">
-                                <Check className="h-4.5 w-4.5" />
-                              </button>
-                              <button 
-                                onClick={handleEditCancel}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
-                                title="Cancel">
-                                <X className="h-4.5 w-4.5" />
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <button 
-                                onClick={() => handleEditStart(job)}
-                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                title="Edit">
-                                <Pencil className="h-4.5 w-4.5" />
-                              </button>
-                              <button 
-                                onClick={() => handleCloseJob(job.id)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-bold ${
-                                  job.status === "Closed"
-                                    ? "text-green-600 hover:bg-green-50"
-                                    : "text-orange-600 hover:bg-orange-50"
-                                }`}
-                                title={job.status === "Closed" ? "Reopen" : "Close"}>
-                                <X className="h-4 w-4" />
-                                {job.status === "Closed" ? "Reopen" : "Close"}
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteJob(job.id)}
-                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                title="Delete">
-                                <Trash2 className="h-4.5 w-4.5" />
-                              </button>
-                            </>
-                          )}
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingJobId(job.id)}
+                            className="p-2 rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                            title="Delete Job"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-gray-500 font-medium">
+                      No jobs found. Try adjusting your search or filter.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="block md:hidden divide-y divide-gray-100">
+            {filteredJobs.map((job: any) => (
+              <div key={job.id} className="p-6 space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">{job.title}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{job.location} • {job.type}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
+                    Active
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  <Link
+                    href={`/manage-jobs/${job.id}/applicants`}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700"
+                  >
+                    <Users className="h-4 w-4" />
+                    {job.applicants} Applicants
+                  </Link>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openEditModal(job)}
+                      className="p-2 rounded-lg bg-gray-50 text-gray-600"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingJobId(job.id)}
+                      className="p-2 rounded-lg bg-rose-50 text-rose-600"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
+
+      {/* Edit Job Modal */}
+      {editingJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl border border-gray-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+              <h3 className="text-xl font-bold text-gray-900">Edit Job Listing</h3>
+              <button
+                onClick={() => setEditingJob(null)}
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateJob} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  Job Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editLocation}
+                    onChange={(e) => setEditLocation(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Work Type
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editType}
+                    onChange={(e) => setEditType(e.target.value)}
+                    placeholder="Full-Time / Remote"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  Salary Range
+                </label>
+                <input
+                  type="text"
+                  value={editSalaryRange}
+                  onChange={(e) => setEditSalaryRange(e.target.value)}
+                  placeholder="e.g. $60k - $90k"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  Description
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingJob(null)}
+                  className="px-6 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="px-6 py-3 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                >
+                  {isUpdating && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingJobId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-100 text-center">
+            <div className="h-14 w-14 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100">
+              <AlertCircle className="h-7 w-7" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Job Post</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to delete this job listing? This action cannot be undone.
+            </p>
+
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => setDeletingJobId(null)}
+                className="px-6 py-3 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteJob(deletingJobId)}
+                className="px-6 py-3 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 transition shadow-lg shadow-rose-500/20"
+              >
+                Delete Job
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
