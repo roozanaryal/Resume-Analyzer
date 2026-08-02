@@ -15,6 +15,7 @@ import {
   Users,
   Briefcase,
   Loader2,
+  MessageSquare,
   X,
   ExternalLink,
 } from "lucide-react";
@@ -261,17 +262,24 @@ export default function ApplicantsPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => openResume(app.resumeURL)}
-                      className="flex-1 bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer ring-1 ring-blue-200 hover:ring-blue-300"
+                      className="flex-1 bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors text-xs sm:text-sm flex items-center justify-center gap-1.5 cursor-pointer ring-1 ring-blue-200 hover:ring-blue-300"
                     >
                       <FileText className="h-4 w-4" />
                       Resume
                     </button>
+                    <Link
+                      href="/hr-messages"
+                      className="px-3 bg-violet-50 text-violet-600 font-bold py-3 rounded-xl hover:bg-violet-100 transition-colors text-xs sm:text-sm flex items-center justify-center cursor-pointer ring-1 ring-violet-200"
+                      title="Send Message"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Link>
                     <button
                       onClick={() => setSelectedApplicant(app)}
-                      className="flex-1 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold py-3 rounded-xl hover:shadow-xl transition-all text-sm shadow-md cursor-pointer active:scale-95"
+                      className="flex-1 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold py-3 rounded-xl hover:shadow-xl transition-all text-xs sm:text-sm shadow-md cursor-pointer active:scale-95"
                     >
                       Review
                     </button>

@@ -5,6 +5,7 @@ import {
   Building2,
   LayoutDashboard,
   LogOut,
+  MessageSquare,
   PlusSquare,
   User as UserIcon,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import { useUser, useLogout } from "@/features/auth/hooks";
 
 const SIDEBAR_LINKS = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: MessageSquare, label: "Messages", href: "/hr-messages" },
   { icon: PlusSquare, label: "Post Job", href: "/postjob" },
   { icon: Briefcase, label: "Manage Jobs", href: "/manage-jobs" },
   { icon: Building2, label: "Company Profile", href: "/company-profile" },

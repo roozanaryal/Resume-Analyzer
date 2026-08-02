@@ -12,6 +12,7 @@ import {
   Star,
   Share2,
   Bookmark,
+  MessageSquare,
   Upload,
   FileText,
   X,
@@ -158,6 +159,13 @@ export default function JobDetailsPage() {
           Back to Search
         </Link>
         <div className="flex gap-3">
+          <Link
+            href="/messages"
+            className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm cursor-pointer"
+            title="Message Employer"
+          >
+            <MessageSquare className="h-5 w-5" />
+          </Link>
           <button
             onClick={() => {
               if (navigator.clipboard) {
