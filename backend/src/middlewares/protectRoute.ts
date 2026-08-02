@@ -32,6 +32,14 @@ export const protectRoute = async (req: AuthRequest, res: Response, next: NextFu
         name: true,
         email: true,
         role: true,
+        bio: true,
+        resumeURL: true,
+        companyName: true,
+        companyWebsite: true,
+        companySize: true,
+        companyIndustry: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 

@@ -20,6 +20,14 @@ export interface User {
   email: string;
   name?: string;
   role: string;
+  bio?: string;
+  resumeURL?: string;
+  companyName?: string;
+  companyWebsite?: string;
+  companySize?: string;
+  companyIndustry?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthResponse {

@@ -49,3 +49,14 @@ export const useRegister = () => {
     },
   });
 };
+
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Parameters<typeof authApi.updateProfile>[0]) => authApi.updateProfile(data),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["user"], updatedUser);
+    },
+  });
+};

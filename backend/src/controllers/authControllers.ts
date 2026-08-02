@@ -95,6 +95,47 @@ export const getMe = async (req: Request & { user?: any }, res: Response) => {
   return res.status(200).json({ user: req.user });
 };
 
+export const updateProfile = async (req: Request & { user?: any }, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const { name, companyName, bio, companyWebsite, companySize, companyIndustry } = req.body;
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(companyName !== undefined && { companyName }),
+        ...(bio !== undefined && { bio }),
+        ...(companyWebsite !== undefined && { companyWebsite }),
+        ...(companySize !== undefined && { companySize }),
+        ...(companyIndustry !== undefined && { companyIndustry }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        bio: true,
+        resumeURL: true,
+        companyName: true,
+        companyWebsite: true,
+        companySize: true,
+        companyIndustry: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return res.status(200).json({ user: updatedUser, message: "Profile updated successfully" });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    return res.status(500).json({ message: "Failed to update profile" });
+  }
+};
+
 export const logoutUser = (req: Request, res: Response) => {
   res.clearCookie("token", {
     httpOnly: true,

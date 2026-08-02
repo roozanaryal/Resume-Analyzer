@@ -20,9 +20,12 @@ model User {
   password String
   role     Role   @default(CANDIDATE)
 
-  bio         String?
-  resumeURL   String?
-  companyName String?
+  bio             String?
+  resumeURL       String?
+  companyName     String?
+  companyWebsite  String?
+  companySize     String?
+  companyIndustry String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

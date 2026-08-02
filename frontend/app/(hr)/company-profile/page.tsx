@@ -1,45 +1,91 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, Mail, Pencil, Check, X } from "lucide-react";
-// import Link from "next/link";
+import { Building2, Mail, Pencil, Check, X, Loader2, AlertCircle } from "lucide-react";
+import { useUser, useUpdateProfile } from "@/features/auth/hooks";
 
 export default function CompanyProfilePage() {
-  const [showWelcomeAlert, setShowWelcomeAlert] = useState(true);
+  const { data: user, isLoading } = useUser();
+  const updateProfileMutation = useUpdateProfile();
+
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
   const [companyData, setCompanyData] = useState({
-    name: "John Davis",
-    email: "company4@timetoprogram.com",
-    company: "NeoHire Labs",
-    about:
-      "NeoHire Labs is a recruitment intelligence platform that leverages machine learning to match companies with top-tier tech talent.",
-    website: "https://neohire.labs",
-    size: "201-500 employees",
-    industry: "Recruitment Intelligence",
+    name: "",
+    email: "",
+    company: "",
+    about: "",
+    website: "",
+    size: "11-50 employees",
+    industry: "",
   });
+
   const [editData, setEditData] = useState(companyData);
 
-  // Auto-dismiss welcome alert after 3 seconds
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWelcomeAlert(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (user) {
+      const initial = {
+        name: user.name || "",
+        email: user.email || "",
+        company: user.companyName || "",
+        about: user.bio || "",
+        website: user.companyWebsite || "",
+        size: user.companySize || "11-50 employees",
+        industry: user.companyIndustry || "",
+      };
+      setCompanyData(initial);
+    }
+  }, [user]);
 
   const handleEditStart = () => {
     setEditData(companyData);
     setIsEditing(true);
+    setErrorMessage("");
   };
 
-  const handleEditSave = () => {
-    setCompanyData(editData);
-    setIsEditing(false);
+  const handleEditSave = async () => {
+    try {
+      setErrorMessage("");
+      await updateProfileMutation.mutateAsync({
+        name: editData.name,
+        companyName: editData.company,
+        bio: editData.about,
+        companyWebsite: editData.website,
+        companySize: editData.size,
+        companyIndustry: editData.industry,
+      });
+
+      setCompanyData(editData);
+      setIsEditing(false);
+      setSuccessMessage("Company profile updated successfully!");
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 4000);
+    } catch (err: any) {
+      setErrorMessage(
+        err?.response?.data?.message || "Failed to update profile. Please try again."
+      );
+    }
   };
 
   const handleEditCancel = () => {
     setIsEditing(false);
+    setErrorMessage("");
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-3 text-gray-500 font-medium">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span>Loading company profile...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
@@ -47,17 +93,35 @@ export default function CompanyProfilePage() {
       <div className="fixed top-[-10%] left-[-10%] h-87.5 sm:h-125 w-87.5 sm:w-125 rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
       <div className="fixed right-[-5%] top-[20%] h-75 sm:h-100 w-75 sm:w-100 rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
 
-      {/* Welcome Alert */}
-      {showWelcomeAlert && (
+      {/* Success Alert */}
+      {successMessage && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center gap-3 px-6 py-3.5 bg-emerald-50 border border-emerald-200 rounded-xl shadow-lg backdrop-blur-sm">
             <Check className="h-5 w-5 text-emerald-600 shrink-0" />
             <span className="text-sm font-semibold text-emerald-700">
-              Welcome! Your profile is ready to edit.
+              {successMessage}
             </span>
             <button
-              onClick={() => setShowWelcomeAlert(false)}
+              onClick={() => setSuccessMessage("")}
               className="ml-2 text-emerald-600 hover:text-emerald-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error Alert */}
+      {errorMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-3 px-6 py-3.5 bg-rose-50 border border-rose-200 rounded-xl shadow-lg backdrop-blur-sm">
+            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+            <span className="text-sm font-semibold text-rose-700">
+              {errorMessage}
+            </span>
+            <button
+              onClick={() => setErrorMessage("")}
+              className="ml-2 text-rose-600 hover:text-rose-700"
             >
               <X className="h-4 w-4" />
             </button>
@@ -90,7 +154,7 @@ export default function CompanyProfilePage() {
           {/* Profile Header */}
           <div className="bg-linear-to-r from-blue-600 to-violet-600 px-8 md:px-12 py-8 md:py-10">
             <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-              Your Company Details
+              {companyData.company || "Your Company Details"}
             </h2>
             <p className="text-blue-100 mt-1 text-sm md:text-base">
               Keep your information up to date
@@ -118,10 +182,11 @@ export default function CompanyProfilePage() {
                           setEditData({ ...editData, name: e.target.value })
                         }
                         className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900"
+                        placeholder="Enter full name"
                       />
                     ) : (
                       <p className="text-lg font-semibold text-gray-900">
-                        {companyData.name}
+                        {companyData.name || "Not provided"}
                       </p>
                     )}
                   </div>
@@ -129,23 +194,12 @@ export default function CompanyProfilePage() {
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       Email Address
                     </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        value={editData.email}
-                        onChange={(e) =>
-                          setEditData({ ...editData, email: e.target.value })
-                        }
-                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-5 w-5 text-blue-600" />
-                        <p className="text-lg font-semibold text-gray-900">
-                          {companyData.email}
-                        </p>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-5 w-5 text-blue-600" />
+                      <p className="text-lg font-semibold text-gray-900">
+                        {companyData.email || "Not provided"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -177,10 +231,11 @@ export default function CompanyProfilePage() {
                             })
                           }
                           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900"
+                          placeholder="e.g. Acme Corp"
                         />
                       ) : (
                         <p className="text-lg font-semibold text-gray-900">
-                          {companyData.company}
+                          {companyData.company || "Not provided"}
                         </p>
                       )}
                     </div>
@@ -197,10 +252,26 @@ export default function CompanyProfilePage() {
                               setEditData({ ...editData, website: e.target.value })
                             }
                             className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900 text-sm"
+                            placeholder="https://example.com"
                           />
                         ) : (
                           <p className="text-sm font-semibold text-blue-600">
-                            {companyData.website}
+                            {companyData.website ? (
+                              <a
+                                href={
+                                  companyData.website.startsWith("http")
+                                    ? companyData.website
+                                    : `https://${companyData.website}`
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:underline"
+                              >
+                                {companyData.website}
+                              </a>
+                            ) : (
+                              <span className="text-gray-400 font-normal">Not set</span>
+                            )}
                           </p>
                         )}
                       </div>
@@ -225,7 +296,7 @@ export default function CompanyProfilePage() {
                           </select>
                         ) : (
                           <p className="text-sm font-semibold text-gray-900">
-                            {companyData.size}
+                            {companyData.size || "Not set"}
                           </p>
                         )}
                       </div>
@@ -241,10 +312,11 @@ export default function CompanyProfilePage() {
                               setEditData({ ...editData, industry: e.target.value })
                             }
                             className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-gray-900 text-sm"
+                            placeholder="e.g. Software, Healthcare"
                           />
                         ) : (
                           <p className="text-sm font-semibold text-gray-900">
-                            {companyData.industry}
+                            {companyData.industry || "Not set"}
                           </p>
                         )}
                       </div>
@@ -269,10 +341,11 @@ export default function CompanyProfilePage() {
                     }
                     rows={4}
                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 resize-none"
+                    placeholder="Tell candidates about your company..."
                   />
                 ) : (
                   <p className="text-gray-700 font-medium leading-relaxed">
-                    {companyData.about}
+                    {companyData.about || "No description provided yet."}
                   </p>
                 )}
               </div>
@@ -283,14 +356,25 @@ export default function CompanyProfilePage() {
               <div className="flex gap-3 pt-6 border-t border-gray-100">
                 <button
                   onClick={handleEditSave}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-linear-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95"
+                  disabled={updateProfileMutation.isPending}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-linear-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  <Check className="h-5 w-5" />
-                  Save Changes
+                  {updateProfileMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-5 w-5" />
+                      Save Changes
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={handleEditCancel}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all active:scale-95"
+                  disabled={updateProfileMutation.isPending}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all active:scale-95 disabled:opacity-50"
                 >
                   <X className="h-5 w-5" />
                   Cancel
