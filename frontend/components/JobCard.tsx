@@ -5,7 +5,7 @@ import { Briefcase, MapPin, Bookmark, Calendar, ArrowRight } from "lucide-react"
 import Link from "next/link";
 
 export interface Job {
-  id: number;
+  id: string | number;
   title: string;
   company: string;
   location: string;
@@ -20,8 +20,8 @@ export interface Job {
 interface JobCardProps {
   job: Job;
   isSaved?: boolean;
-  onSaveToggle: (id: number) => void;
-  onApply?: (id: number) => void;
+  onSaveToggle: (id: string | number) => void;
+  onApply?: (id: string | number) => void;
   isApplied?: boolean;
   showSavedDate?: boolean;
   view?: "grid" | "list";

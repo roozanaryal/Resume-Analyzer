@@ -9,8 +9,12 @@ import {
   getMyJobs,
   updateJob,
   deleteJob,
+  applyToJob,
+  getJobApplicationStatus,
+  getDashboardStats,
 } from "../controllers/jobController.js";
 import { protectRoute } from "../middlewares/protectRoute.js";
+import { uploadResume } from "../middlewares/upload.js";
 import { body } from "express-validator";
 
 const router: Router = Router();
@@ -36,6 +40,9 @@ router.post(
 // Get all jobs with pagination and filtering
 router.get("/", getJobs);
 
+// HR Dashboard Stats
+router.get("/dashboard-stats", protectRoute, getDashboardStats);
+
 // HR specific: Get jobs posted by the logged-in user (Move before /:id)
 router.get("/my-jobs", protectRoute, getMyJobs);
 
@@ -43,6 +50,10 @@ router.get("/my-jobs", protectRoute, getMyJobs);
 router.get("/saved", protectRoute, getSavedJobs);
 router.post("/save/:jobId", protectRoute, saveJobs);
 router.delete("/saved/:id", protectRoute, deleteSavedJob);
+
+// Job Application routes (Move /apply before /:id)
+router.get("/apply/status/:jobId", protectRoute, getJobApplicationStatus);
+router.post("/apply/:jobId", protectRoute, uploadResume.single("resume"), applyToJob);
 
 // Parameterized job routes (Specific job actions)
 router.get("/:id", getJob);

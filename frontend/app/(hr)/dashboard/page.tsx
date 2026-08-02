@@ -1,17 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { 
   TrendingUp, Users, Briefcase, Eye, ArrowUpRight,
-  CheckCircle2, Clock, AlertCircle, LineChart
+  CheckCircle2, Clock, AlertCircle, LineChart, Loader2
 } from "lucide-react";
+import { useDashboardStats } from "@/features/jobs/hooks";
+import Link from "next/link";
 
 export default function DashboardPage() {
-  const [stats] = useState([
+  const { data, isLoading, isError } = useDashboardStats();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500 font-medium">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span>Loading dashboard statistics...</span>
+      </div>
+    );
+  }
+
+  const totalJobs = data?.totalJobsPosted ?? 0;
+  const totalApps = data?.totalApplications ?? 0;
+  const pendingReviews = data?.pendingReviews ?? 0;
+  const acceptedCount = data?.acceptedCount ?? 0;
+
+  const stats = [
     {
       title: "Total Jobs Posted",
-      value: "24",
-      change: "+12%",
+      value: totalJobs.toString(),
+      change: totalJobs > 0 ? "Active" : "None",
       isPositive: true,
       icon: Briefcase,
       bgColor: "bg-blue-50",
@@ -20,8 +38,8 @@ export default function DashboardPage() {
     },
     {
       title: "Active Applications",
-      value: "156",
-      change: "+23%",
+      value: totalApps.toString(),
+      change: totalApps > 0 ? `${totalApps} Total` : "0 Total",
       isPositive: true,
       icon: Users,
       bgColor: "bg-emerald-50",
@@ -29,94 +47,72 @@ export default function DashboardPage() {
       borderColor: "border-emerald-200"
     },
     {
-      title: "Profile Views",
-      value: "2,849",
-      change: "+8%",
+      title: "Pending Reviews",
+      value: pendingReviews.toString(),
+      change: pendingReviews > 0 ? "Action Required" : "All Clear",
+      isPositive: pendingReviews === 0,
+      icon: AlertCircle,
+      bgColor: "bg-amber-50",
+      iconColor: "text-amber-600",
+      borderColor: "border-amber-200"
+    },
+    {
+      title: "Accepted Candidates",
+      value: acceptedCount.toString(),
+      change: acceptedCount > 0 ? "Hired" : "0 Hired",
       isPositive: true,
-      icon: Eye,
+      icon: CheckCircle2,
       bgColor: "bg-purple-50",
       iconColor: "text-purple-600",
       borderColor: "border-purple-200"
-    },
-    {
-      title: "Jobs Filled",
-      value: "8",
-      change: "+2",
-      isPositive: true,
-      icon: CheckCircle2,
-      bgColor: "bg-rose-50",
-      iconColor: "text-rose-600",
-      borderColor: "border-rose-200"
     }
-  ]);
+  ];
 
-  const [recentApplications] = useState([
-    {
-      id: 1,
-      name: "Sarah Anderson",
-      position: "Senior React Developer",
-      date: "2 hours ago",
-      status: "New",
-      statusColor: "bg-blue-50 text-blue-600"
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      position: "UI/UX Designer",
-      date: "5 hours ago",
-      status: "Reviewing",
-      statusColor: "bg-amber-50 text-amber-600"
-    },
-    {
-      id: 3,
-      name: "Emma Wilson",
-      position: "DevOps Engineer",
-      date: "1 day ago",
-      status: "Interview",
-      statusColor: "bg-emerald-50 text-emerald-600"
-    },
-    {
-      id: 4,
-      name: "James Robert",
-      position: "Product Manager",
-      date: "2 days ago",
-      status: "Hired",
-      statusColor: "bg-green-50 text-green-600"
-    }
-  ]);
+  const recentApplications = (data?.recentApplications || []).map((app: any) => {
+    const formattedDate = app.createdAt
+      ? new Date(app.createdAt).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "Recently";
 
-  const [jobsPerformance] = useState([
-    {
-      title: "Senior Software Engineer",
-      applications: 45,
-      views: 234,
-      filled: true
-    },
-    {
-      title: "UX/UI Designer",
-      applications: 32,
-      views: 189,
-      filled: false
-    },
-    {
-      title: "DevOps Engineer",
-      applications: 28,
-      views: 156,
-      filled: false
-    }
-  ]);
+    let statusColor = "bg-blue-50 text-blue-600";
+    if (app.status === "ACCEPTED") statusColor = "bg-emerald-50 text-emerald-600";
+    if (app.status === "REJECTED") statusColor = "bg-rose-50 text-rose-600";
+    if (app.status === "REVIEWED") statusColor = "bg-amber-50 text-amber-600";
+
+    return {
+      id: app.id,
+      name: app.user?.name || "Candidate",
+      position: app.job?.title || "Position",
+      date: formattedDate,
+      status: app.status || "PENDING",
+      statusColor
+    };
+  });
+
+  const topJobs = data?.topJobs || [];
 
   return (
-    <div className="relative min-h-screen bg-white overflow-hidden">
+    <div className="relative min-h-screen bg-white overflow-hidden pb-16">
       {/* Background Decor */}
       <div className="fixed top-[-10%] left-[-10%] h-87.5 sm:h-125 w-87.5 sm:w-125 rounded-full bg-blue-50/50 blur-3xl pointer-events-none" />
       <div className="fixed right-[-5%] top-[20%] h-75 sm:h-100 w-75 sm:w-100 rounded-full bg-violet-50/50 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 mx-auto px-6 py-12 md:py-16 md:px-12 lg:px-24">
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-          <p className="text-base md:text-lg text-gray-600 mt-2">Welcome back! Here&rsquo;s your recruitment overview</p>
+        <div className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+            <p className="text-base md:text-lg text-gray-600 mt-2">Welcome back! Here is your live recruitment overview</p>
+          </div>
+          <Link
+            href="/postjob"
+            className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition active:scale-95 text-sm"
+          >
+            + Post New Job
+          </Link>
         </div>
 
         {/* Stats Grid */}
@@ -149,34 +145,43 @@ export default function DashboardPage() {
           <div className="lg:col-span-2">
             <div className="rounded-2xl shadow-xl shadow-blue-500/5 border border-gray-200 overflow-hidden backdrop-blur-sm bg-white/98">
               {/* Header */}
-              <div className="bg-linear-to-r from-blue-600 to-violet-600 px-8 py-6">
+              <div className="bg-linear-to-r from-blue-600 to-violet-600 px-8 py-6 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-white">Recent Applications</h2>
+                <span className="text-xs text-blue-100 font-semibold">
+                  {recentApplications.length} latest
+                </span>
               </div>
 
               {/* Content */}
               <div className="divide-y divide-gray-100">
-                {recentApplications.map((app) => (
-                  <div key={app.id} className="p-6 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 mb-1">{app.name}</h4>
-                        <p className="text-sm text-gray-600 mb-2">{app.position}</p>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-gray-400" />
-                          <span className="text-xs text-gray-500">{app.date}</span>
+                {recentApplications.length > 0 ? (
+                  recentApplications.map((app: any) => (
+                    <div key={app.id} className="p-6 hover:bg-gray-50/50 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-900 mb-1">{app.name}</h4>
+                          <p className="text-sm text-gray-600 mb-2">{app.position}</p>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3.5 w-3.5 text-gray-400" />
+                            <span className="text-xs text-gray-500">{app.date}</span>
+                          </div>
+                        </div>
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${app.statusColor}`}>
+                          {app.status}
                         </div>
                       </div>
-                      <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${app.statusColor}`}>
-                        {app.status}
-                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="p-12 text-center text-gray-500 font-medium">
+                    No applications received yet. Applications submitted by candidates will appear here.
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
 
-          {/* Quick Stats */}
+          {/* Quick Stats Sidebar */}
           <div className="space-y-6">
             {/* Pending Reviews */}
             <div className="rounded-2xl shadow-xl shadow-blue-500/5 border border-gray-200 overflow-hidden backdrop-blur-sm bg-white/98 p-6">
@@ -186,7 +191,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-semibold">Pending Reviews</p>
-                  <p className="text-2xl font-bold text-gray-900">12</p>
+                  <p className="text-2xl font-bold text-gray-900">{pendingReviews}</p>
                 </div>
               </div>
               <p className="text-xs text-gray-500">Applications waiting for your review</p>
@@ -199,11 +204,11 @@ export default function DashboardPage() {
                   <Clock className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 font-semibold">In Progress</p>
-                  <p className="text-2xl font-bold text-gray-900">8</p>
+                  <p className="text-sm text-gray-600 font-semibold">Total Postings</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalJobs}</p>
                 </div>
               </div>
-              <p className="text-xs text-gray-500">Interviews scheduled this week</p>
+              <p className="text-xs text-gray-500">Active job listings managed by you</p>
             </div>
 
             {/* Conversion Rate */}
@@ -213,11 +218,13 @@ export default function DashboardPage() {
                   <TrendingUp className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 font-semibold">Conversion Rate</p>
-                  <p className="text-2xl font-bold text-gray-900">33%</p>
+                  <p className="text-sm text-gray-600 font-semibold">Acceptance Rate</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {totalApps > 0 ? `${Math.round((acceptedCount / totalApps) * 100)}%` : "0%"}
+                  </p>
                 </div>
               </div>
-              <p className="text-xs text-gray-500">Applications to hires this month</p>
+              <p className="text-xs text-gray-500">Applications accepted out of total received</p>
             </div>
           </div>
         </div>
@@ -226,11 +233,17 @@ export default function DashboardPage() {
         <div className="mt-12">
           <div className="rounded-2xl shadow-xl shadow-blue-500/5 border border-gray-200 overflow-hidden backdrop-blur-sm bg-white/98">
             {/* Header */}
-            <div className="bg-linear-to-r from-blue-600 to-violet-600 px-8 py-6">
+            <div className="bg-linear-to-r from-blue-600 to-violet-600 px-8 py-6 flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <LineChart className="h-5 w-5" />
-                Top Performing Jobs
+                Your Job Postings & Performance
               </h2>
+              <Link
+                href="/manage-jobs"
+                className="text-xs font-bold text-white underline hover:text-blue-100 transition"
+              >
+                Manage All Jobs →
+              </Link>
             </div>
 
             {/* Table */}
@@ -240,36 +253,45 @@ export default function DashboardPage() {
                   <tr className="border-b border-gray-100 bg-gray-50/50">
                     <th className="px-8 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Job Title</th>
                     <th className="px-8 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Applications</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Views</th>
-                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Type</th>
+                    <th className="px-8 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {jobsPerformance.map((job, index) => (
-                    <tr key={index} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-8 py-6">
-                        <p className="font-bold text-gray-900">{job.title}</p>
-                      </td>
-                      <td className="px-8 py-6 text-center">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-bold">
-                          <Users className="h-4 w-4" />
-                          {job.applications}
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 text-center">
-                        <p className="font-bold text-gray-900">{job.views}</p>
-                      </td>
-                      <td className="px-8 py-6 text-center">
-                        <span className={`inline-flex px-3 py-1.5 rounded-full text-xs font-bold ${
-                          job.filled 
-                            ? "bg-emerald-50 text-emerald-600" 
-                            : "bg-amber-50 text-amber-600"
-                        }`}>
-                          {job.filled ? "Filled" : "Open"}
-                        </span>
+                  {topJobs.length > 0 ? (
+                    topJobs.map((job: any) => (
+                      <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-8 py-6">
+                          <p className="font-bold text-gray-900">{job.title}</p>
+                        </td>
+                        <td className="px-8 py-6 text-center">
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-bold">
+                            <Users className="h-4 w-4" />
+                            {job.applications}
+                          </div>
+                        </td>
+                        <td className="px-8 py-6 text-center">
+                          <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600">
+                            {job.type || "Full-Time"}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 text-center">
+                          <Link
+                            href={`/manage-jobs/${job.id}/applicants`}
+                            className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                          >
+                            View Applicants
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="px-8 py-8 text-center text-gray-500 font-medium">
+                        No jobs posted yet. Click &quot;Post New Job&quot; above to create your first listing.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

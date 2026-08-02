@@ -1,41 +1,57 @@
 "use client";
 
-import React, { useState } from "react";
-import { ArrowLeft, Search, Bookmark } from "lucide-react";
+import React from "react";
+import { ArrowLeft, Search, Bookmark, Loader2 } from "lucide-react";
 import Link from "next/link";
-import JobCard from "@/components/JobCard";
-
-const SAVED_JOBS = [
-  {
-    id: 1,
-    title: "Senior Software Engineer",
-    company: "TechNova Solutions",
-    location: "San Francisco, USA",
-    type: "Full-Time",
-    category: "IT & Software",
-    date: "5th Jul 2025",
-    salary: "$60k/m",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=TN&backgroundColor=0284c7",
-  },
-  {
-    id: 4,
-    title: "Sales Manager",
-    company: "NeoHire Labs",
-    location: "Remote",
-    type: "Full-Time",
-    category: "Sales",
-    date: "3rd Jul 2025",
-    salary: "$70k/m",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=NH&backgroundColor=2563eb",
-  },
-];
+import JobCard, { Job } from "@/components/JobCard";
+import { useSavedJobs, useToggleSaveJob } from "@/features/jobs/hooks";
 
 export default function SavedJobsPage() {
-  const [savedJobs, setSavedJobs] = useState(SAVED_JOBS);
+  const { data: savedJobsData, isLoading } = useSavedJobs();
+  const toggleSaveMutation = useToggleSaveJob();
 
-  const removeJob = (id: number) => {
-    setSavedJobs((prev) => prev.filter((job) => job.id !== id));
+  const rawSaved = savedJobsData?.savedJobs || [];
+
+  const savedJobs: Job[] = rawSaved
+    .filter((item: any) => item.job)
+    .map((item: any) => {
+      const j = item.job;
+      const companyName = j.employer?.companyName || j.employer?.name || "Company";
+      const formattedDate = j.createdAt
+        ? new Date(j.createdAt).toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })
+        : "Recently";
+
+      return {
+        id: j.id,
+        title: j.title,
+        company: companyName,
+        location: j.location,
+        type: j.type || "Full-Time",
+        category: "Software & Tech",
+        date: formattedDate,
+        salary: j.salaryRange || "Competitive",
+        logo: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+          companyName
+        )}&backgroundColor=0284c7`,
+      };
+    });
+
+  const removeJob = (jobId: string | number) => {
+    toggleSaveMutation.mutate({ jobId: String(jobId), isSaved: true });
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3 text-gray-500 font-medium">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span>Loading saved jobs...</span>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -53,7 +69,7 @@ export default function SavedJobsPage() {
             Saved Jobs
           </h1>
           <p className="text-gray-500 font-medium">
-            Manage and track the jobs you've interested in
+            Manage and track the jobs you are interested in
           </p>
         </div>
 
@@ -82,9 +98,9 @@ export default function SavedJobsPage() {
             />
           ))
         ) : (
-          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center">
+          <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-3xl border border-gray-100 shadow-sm">
             <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-dashed border-gray-200">
-              <Bookmark className="h-10 w-10 text-gray-200" />
+              <Bookmark className="h-10 w-10 text-gray-300" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
               No saved jobs yet
@@ -104,7 +120,7 @@ export default function SavedJobsPage() {
         )}
       </div>
 
-      {/* Recommendations Section (Optional Add-on for "Premium" feel) */}
+      {/* Recommendations Section */}
       {savedJobs.length > 0 && (
         <div className="mt-20">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
@@ -123,7 +139,7 @@ export default function SavedJobsPage() {
                   We'll notify you as soon as new jobs matching your saved
                   interests are posted.
                 </p>
-                <button className="bg-white text-blue-600 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all active:scale-95">
+                <button className="bg-white text-blue-600 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all active:scale-95 cursor-pointer">
                   Turn on Alerts
                 </button>
               </div>

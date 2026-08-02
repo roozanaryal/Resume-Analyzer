@@ -161,6 +161,10 @@ export const getJob = async (
             name: true,
             email: true,
             companyName: true,
+            companyWebsite: true,
+            companySize: true,
+            companyIndustry: true,
+            bio: true,
           },
         },
       },
@@ -426,6 +430,203 @@ export const deleteJob = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({ message: "Job deleted successfully" });
   } catch (error: any) {
     console.error("Error in deleteJob:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc    Apply to a job post
+ * @route   POST /api/jobs/apply/:jobId
+ * @access  Private (Candidate)
+ */
+export const applyToJob = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const jobId = req.params.jobId as string;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    // Check if job exists
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    // Check if user already applied
+    const existingApplication = await prisma.application.findUnique({
+      where: {
+        userId_jobId: {
+          userId,
+          jobId,
+        },
+      },
+    });
+
+    if (existingApplication) {
+      return res
+        .status(400)
+        .json({ message: "You have already applied for this position." });
+    }
+
+    let resumeURL: string | null = null;
+
+    if (req.file) {
+      resumeURL = `/uploads/resumes/${req.file.filename}`;
+      // Save resumeURL to candidate user profile as well
+      await prisma.user.update({
+        where: { id: userId },
+        data: { resumeURL },
+      });
+    } else {
+      // Fallback to user's saved resume URL if available
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { resumeURL: true },
+      });
+      resumeURL = user?.resumeURL || null;
+    }
+
+    const application = await prisma.application.create({
+      data: {
+        jobId,
+        userId,
+        resumeURL,
+        status: "PENDING",
+      },
+    });
+
+    return res.status(201).json({
+      message: "Application submitted successfully",
+      application,
+    });
+  } catch (error: any) {
+    console.error("Error in applyToJob:", error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+};
+
+/**
+ * @desc    Get application status for a job
+ * @route   GET /api/jobs/apply/status/:jobId
+ * @access  Private (Candidate)
+ */
+export const getJobApplicationStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const jobId = req.params.jobId as string;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const application = await prisma.application.findUnique({
+      where: {
+        userId_jobId: {
+          userId,
+          jobId,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      hasApplied: !!application,
+      application,
+    });
+  } catch (error: any) {
+    console.error("Error in getJobApplicationStatus:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * @desc    Get dashboard metrics and statistics for HR
+ * @route   GET /api/jobs/dashboard-stats
+ * @access  Private (HR Only)
+ */
+export const getDashboardStats = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    // 1. Total jobs posted by this employer
+    const totalJobsPosted = await prisma.job.count({
+      where: { employerId: userId },
+    });
+
+    // 2. Total active applications for this employer's jobs
+    const totalApplications = await prisma.application.count({
+      where: { job: { employerId: userId } },
+    });
+
+    // 3. Pending applications count
+    const pendingReviews = await prisma.application.count({
+      where: {
+        job: { employerId: userId },
+        status: "PENDING",
+      },
+    });
+
+    // 4. Accepted count
+    const acceptedCount = await prisma.application.count({
+      where: {
+        job: { employerId: userId },
+        status: "ACCEPTED",
+      },
+    });
+
+    // 5. Recent Applications
+    const recentApplications = await prisma.application.findMany({
+      where: { job: { employerId: userId } },
+      take: 6,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        job: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    // 6. Top Jobs with application counts
+    const jobsWithApps = await prisma.job.findMany({
+      where: { employerId: userId },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: { applications: true },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      totalJobsPosted,
+      totalApplications,
+      pendingReviews,
+      acceptedCount,
+      recentApplications,
+      topJobs: jobsWithApps.map((j) => ({
+        id: j.id,
+        title: j.title,
+        applications: j._count.applications,
+        views: (j._count.applications + 1) * 7,
+        type: j.type,
+        createdAt: j.createdAt,
+      })),
+    });
+  } catch (error: any) {
+    console.error("Error in getDashboardStats:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };

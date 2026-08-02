@@ -33,6 +33,7 @@ model User {
   //Relations
   jobsPosted          Job[]                 @relation("EmployerJob")
   savedJobs           SavedJob[]
+  applications        Application[]
   chatRoomParticipant ChatRoomParticipant[]
   sentMessages        Message[]             @relation("SentMessages")
   recivedMessages     Message[]             @relation("ReceivedMessages")
@@ -46,11 +47,34 @@ model Job {
   salaryRange String?
   type        String?
 
-  employerId String
-  employer   User       @relation("EmployerJob", fields: [employerId], references: [id])
-  savedBy    SavedJob[]
+  employerId   String
+  employer     User          @relation("EmployerJob", fields: [employerId], references: [id])
+  savedBy      SavedJob[]
+  applications Application[]
 
   createdAt DateTime @default(now())
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+model Application {
+  id        String            @id @default(uuid())
+  jobId     String
+  userId    String
+  resumeURL String?
+  status    ApplicationStatus @default(PENDING)
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
 }
 
 model SavedJob {

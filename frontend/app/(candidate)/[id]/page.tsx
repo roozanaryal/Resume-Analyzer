@@ -1,12 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import {
   ArrowLeft,
-  //   Briefcase,
   MapPin,
-  //   Calendar,
-  //   DollarSign,
   Clock,
   CheckCircle2,
   Building2,
@@ -18,57 +15,33 @@ import {
   Upload,
   FileText,
   X,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-
-// Mock Job Data
-const MOCK_JOB = {
-  id: 1,
-  title: "Senior Software Engineer",
-  company: "TechNova Solutions",
-  location: "San Francisco, USA",
-  type: "Full-Time",
-  category: "IT & Software",
-  date: "5th Jul 2025",
-  salary: "$60k - $85k",
-  logo: "https://api.dicebear.com/7.x/initials/svg?seed=TN&backgroundColor=0284c7",
-  description: `We are looking for a highly skilled Senior Software Engineer to join our core architecture team. You will be responsible for designing and implementing scalable services, mentoring junior developers, and collaborating cross-functionally to define the technical roadmap of our flagship product.`,
-  responsibilities: [
-    "Design, develop, and maintain high-performance, scalable web applications.",
-    "Collaborate with product managers and designers to transform requirements into technical specifications.",
-    "Lead code reviews and ensure high code quality and best practices.",
-    "Debug and resolve complex technical issues across the full stack.",
-    "Contribute to the continuous improvement of development processes and tooling.",
-  ],
-  requirements: [
-    "Bachelor's degree in Computer Science or related field (Master's preferred).",
-    "5+ years of experience in full-stack development with modern frameworks (React, Node.js).",
-    "Strong proficiency in TypeScript and asynchronous programming.",
-    "Experience with cloud infrastructure (AWS/GCP) and containerization (Docker/Kubernetes).",
-    "Excellent communication and problem-solving skills.",
-  ],
-  benefits: [
-    "Competitive salary and equity package",
-    "Healthcare, dental, and vision insurance",
-    "Flexible working hours and remote options",
-    "Professional development stipend",
-    "Modern office with well-stocked kitchen",
-  ],
-  companyInfo: {
-    description:
-      "TechNova Solutions is a leading innovator in cloud-native enterprise software. Founded in 2018, we've grown from a small startup to a global team of over 200 passionate builders dedicated to simplifying complex workflows.",
-    website: "https://technova.io",
-    size: "201-500 employees",
-    industry: "Enterprise Software",
-  },
-};
+import {
+  useJob,
+  useSavedJobs,
+  useToggleSaveJob,
+  useApplyToJob,
+  useJobApplicationStatus,
+} from "@/features/jobs/hooks";
 
 export default function JobDetailsPage() {
   const params = useParams();
-  const id = params.id;
-  const [resume, setResume] = React.useState<File | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const id = params.id as string;
+
+  const { data: job, isLoading, isError } = useJob(id);
+  const { data: savedJobsData } = useSavedJobs();
+  const { data: appStatusData } = useJobApplicationStatus(id);
+  const toggleSaveMutation = useToggleSaveJob();
+  const applyMutation = useApplyToJob();
+
+  const [resume, setResume] = useState<File | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -76,11 +49,103 @@ export default function JobDetailsPage() {
     }
   };
 
-  // In a real app, we would fetch job by ID here
-  const job = MOCK_JOB;
+  const savedJobIds: string[] = (savedJobsData?.savedJobs || []).map(
+    (sj: any) => sj.jobId || sj.job?.id
+  );
+  const isSaved = savedJobIds.includes(id);
+  const hasApplied = appStatusData?.hasApplied || false;
+
+  const handleToggleSave = () => {
+    if (id) {
+      toggleSaveMutation.mutate({ jobId: id, isSaved });
+    }
+  };
+
+  const handleApply = async () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      await applyMutation.mutateAsync({
+        jobId: id,
+        resume,
+      });
+
+      setSuccessMessage("Application submitted successfully!");
+      setResume(null);
+
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        "Failed to submit application. Please make sure you are logged in.";
+      setErrorMessage(msg);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-3 text-gray-500 font-medium">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span>Loading job details...</span>
+      </div>
+    );
+  }
+
+  if (isError || !job) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
+        <AlertCircle className="h-12 w-12 text-rose-500" />
+        <h2 className="text-2xl font-bold text-gray-900">Job Not Found</h2>
+        <p className="text-gray-500 max-w-md">
+          The job posting you are looking for does not exist or has been removed.
+        </p>
+        <Link
+          href="/find-jobs"
+          className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-2xl shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Jobs
+        </Link>
+      </div>
+    );
+  }
+
+  const companyName =
+    job.employer?.companyName || job.employer?.name || "Company";
+
+  const formattedDate = job.createdAt
+    ? new Date(job.createdAt).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Recently";
+
+  const companyLogo = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+    companyName
+  )}&backgroundColor=0284c7`;
 
   return (
     <div className="max-w-5xl mx-auto pb-20">
+      {/* Success Banner */}
+      {successMessage && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-xl animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+          {successMessage}
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {errorMessage && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700 shadow-xl animate-in fade-in slide-in-from-top-2">
+          <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+          {errorMessage}
+        </div>
+      )}
+
       {/* Top Navigation */}
       <div className="flex items-center justify-between mb-8">
         <Link
@@ -93,11 +158,28 @@ export default function JobDetailsPage() {
           Back to Search
         </Link>
         <div className="flex gap-3">
-          <button className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm">
+          <button
+            onClick={() => {
+              if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href);
+                alert("Job link copied to clipboard!");
+              }
+            }}
+            className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm cursor-pointer"
+            title="Share Job"
+          >
             <Share2 className="h-5 w-5" />
           </button>
-          <button className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm">
-            <Bookmark className="h-5 w-5" />
+          <button
+            onClick={handleToggleSave}
+            className={`h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center transition-all shadow-sm cursor-pointer ${
+              isSaved
+                ? "text-blue-600 bg-blue-50 border-blue-200"
+                : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+            }`}
+            title={isSaved ? "Saved" : "Save Job"}
+          >
+            <Bookmark className="h-5 w-5" fill={isSaved ? "currentColor" : "none"} />
           </button>
         </div>
       </div>
@@ -112,18 +194,18 @@ export default function JobDetailsPage() {
             <div className="flex flex-col md:flex-row md:items-start gap-6 relative z-10">
               <div className="h-20 w-20 shrink-0 rounded-2xl bg-white border border-gray-100 shadow-md p-3 flex items-center justify-center overflow-hidden">
                 <img
-                  src={job.logo}
-                  alt={job.company}
+                  src={companyLogo}
+                  alt={companyName}
                   className="h-full w-full object-contain"
                 />
               </div>
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider">
-                    {job.category}
+                    {job.employer?.companyIndustry || "Software & Tech"}
                   </span>
                   <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold uppercase tracking-wider">
-                    {job.type}
+                    {job.type || "Full-Time"}
                   </span>
                 </div>
                 <h1 className="text-3xl font-extrabold text-gray-900 mb-2 leading-tight">
@@ -132,9 +214,7 @@ export default function JobDetailsPage() {
                 <div className="flex flex-wrap items-center gap-4 text-gray-500 font-medium">
                   <div className="flex items-center gap-1.5">
                     <Building2 className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-900 font-bold">
-                      {job.company}
-                    </span>
+                    <span className="text-gray-900 font-bold">{companyName}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
                     <MapPin className="h-4 w-4 text-gray-400" />
@@ -142,7 +222,7 @@ export default function JobDetailsPage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-sm">
                     <Clock className="h-4 w-4 text-gray-400" />
-                    Posted {job.date}
+                    Posted {formattedDate}
                   </div>
                 </div>
               </div>
@@ -153,19 +233,25 @@ export default function JobDetailsPage() {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                   Salary Range
                 </p>
-                <p className="text-lg font-black text-blue-600">{job.salary}</p>
+                <p className="text-lg font-black text-blue-600">
+                  {job.salaryRange || "Competitive"}
+                </p>
               </div>
               <div className="bg-gray-50 p-4 rounded-2xl">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-                  Experience
+                  Company Size
                 </p>
-                <p className="text-lg font-black text-gray-900">5+ Years</p>
+                <p className="text-lg font-black text-gray-900">
+                  {job.employer?.companySize || "11-50 employees"}
+                </p>
               </div>
               <div className="bg-gray-50 p-4 rounded-2xl col-span-2 md:col-span-1">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                   Work Type
                 </p>
-                <p className="text-lg font-black text-gray-900">{job.type}</p>
+                <p className="text-lg font-black text-gray-900">
+                  {job.type || "Full-Time"}
+                </p>
               </div>
             </div>
           </div>
@@ -177,47 +263,9 @@ export default function JobDetailsPage() {
                 <div className="h-8 w-1 bg-blue-600 rounded-full" />
                 Job Description
               </h2>
-              <p className="text-gray-600 leading-relaxed text-lg font-medium">
+              <p className="text-gray-600 leading-relaxed text-lg font-medium whitespace-pre-line">
                 {job.description}
               </p>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="h-8 w-1 bg-blue-600 rounded-full" />
-                Key Responsibilities
-              </h2>
-              <ul className="grid gap-4">
-                {job.responsibilities.map((item, index) => (
-                  <li key={index} className="flex items-start gap-4">
-                    <div className="h-6 w-6 mt-0.5 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <span className="text-gray-600 font-medium leading-relaxed">
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div className="h-8 w-1 bg-blue-600 rounded-full" />
-                Qualifications & Requirements
-              </h2>
-              <ul className="grid gap-4">
-                {job.requirements.map((item, index) => (
-                  <li key={index} className="flex items-start gap-4">
-                    <div className="h-6 w-6 mt-0.5 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    </div>
-                    <span className="text-gray-600 font-medium leading-relaxed">
-                      {item}
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </div>
@@ -226,96 +274,119 @@ export default function JobDetailsPage() {
         <div className="space-y-8">
           {/* Quick Apply Card */}
           <div className="bg-linear-to-br from-blue-600 to-indigo-700 rounded-4xl p-8 text-white shadow-xl shadow-blue-200">
-            <h3 className="text-xl font-bold mb-4">Interested in this role?</h3>
+            <h3 className="text-xl font-bold mb-4">
+              {hasApplied ? "Application Status" : "Interested in this role?"}
+            </h3>
             <p className="text-blue-100 mb-6 font-medium">
-              Submit your application today and our team will get back to you
-              soon.
+              {hasApplied
+                ? "You have already applied for this position."
+                : "Submit your application with your resume to stand out to the employer."}
             </p>
 
             {/* Resume Upload Section */}
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-blue-100 mb-3 uppercase tracking-wider">
-                Your Resume
-              </label>
-              
-              {!resume ? (
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full border-2 border-dashed border-blue-400/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 hover:border-white transition-all group"
-                >
-                  <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <Upload className="h-6 w-6 text-white" />
-                  </div>
-                  <p className="text-sm font-bold text-white mb-1">Click to upload</p>
-                  <p className="text-xs text-blue-200 font-medium">PDF, DOC, DOCX (Max. 5MB)</p>
-                </div>
-              ) : (
-                <div className="w-full bg-white/10 rounded-2xl p-4 flex items-center justify-between border border-white/20">
-                  <div className="flex items-center gap-4 overflow-hidden">
-                    <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-500 flex items-center justify-center">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-sm font-bold text-white truncate">{resume.name}</p>
-                      <p className="text-xs text-blue-200 font-medium mt-0.5">
-                        {(resume.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => setResume(null)}
-                    className="h-8 w-8 shrink-0 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors text-blue-200 hover:text-white"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-              
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept=".pdf,.doc,.docx" 
-                className="hidden" 
-              />
-            </div>
+            {!hasApplied && (
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-blue-100 mb-3 uppercase tracking-wider">
+                  Your Resume
+                </label>
 
-            <button className="w-full bg-white text-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-50 transition-all shadow-lg active:scale-95 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed">
-              Apply Now
+                {!resume ? (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-blue-400/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 hover:border-white transition-all group"
+                  >
+                    <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <Upload className="h-6 w-6 text-white" />
+                    </div>
+                    <p className="text-sm font-bold text-white mb-1">Click to upload</p>
+                    <p className="text-xs text-blue-200 font-medium">PDF, DOC, DOCX (Max. 5MB)</p>
+                  </div>
+                ) : (
+                  <div className="w-full bg-white/10 rounded-2xl p-4 flex items-center justify-between border border-white/20">
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-500 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="text-sm font-bold text-white truncate">{resume.name}</p>
+                        <p className="text-xs text-blue-200 font-medium mt-0.5">
+                          {(resume.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setResume(null)}
+                      className="h-8 w-8 shrink-0 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors text-blue-200 hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                />
+              </div>
+            )}
+
+            <button
+              onClick={handleApply}
+              disabled={hasApplied || applyMutation.isPending}
+              className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+                hasApplied
+                  ? "bg-emerald-500 text-white cursor-default shadow-none"
+                  : "bg-white text-blue-600 hover:bg-blue-50 cursor-pointer disabled:opacity-50"
+              }`}
+            >
+              {applyMutation.isPending ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Submitting...
+                </>
+              ) : hasApplied ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5" />
+                  Applied
+                </>
+              ) : (
+                "Apply Now"
+              )}
             </button>
             <p className="text-center text-xs text-blue-200 mt-4 font-bold uppercase tracking-wider">
-              Takes less than 5 minutes
+              {hasApplied ? "Application Received" : "Takes less than 5 minutes"}
             </p>
           </div>
 
           {/* Company Info Card */}
           <div className="bg-white rounded-4xl p-8 border border-gray-100 shadow-sm">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">
-              About Company
-            </h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-6">About Company</h3>
             <div className="flex items-center gap-4 mb-6">
               <div className="h-14 w-14 shrink-0 rounded-2xl bg-gray-50 border border-gray-100 p-2 flex items-center justify-center overflow-hidden">
                 <img
-                  src={job.logo}
-                  alt={job.company}
+                  src={companyLogo}
+                  alt={companyName}
                   className="h-full w-full object-contain"
                 />
               </div>
               <div>
-                <p className="font-bold text-gray-900">{job.company}</p>
+                <p className="font-bold text-gray-900">{companyName}</p>
                 <div className="flex items-center gap-1 text-yellow-400">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <Star key={i} className="h-3 w-3 fill-current" />
                   ))}
                   <span className="text-[10px] text-gray-400 font-bold ml-1">
-                    4.9 (124 reviews)
+                    4.9 (Verified)
                   </span>
                 </div>
               </div>
             </div>
 
             <p className="text-gray-500 font-medium text-sm leading-relaxed mb-6">
-              {job.companyInfo.description}
+              {job.employer?.bio || "No company description provided."}
             </p>
 
             <div className="space-y-4 pt-6 border-t border-gray-50">
@@ -326,14 +397,22 @@ export default function JobDetailsPage() {
                     Website
                   </span>
                 </div>
-                <a
-                  href={job.companyInfo.website}
-                  target="_blank"
-                  className="text-sm font-bold text-blue-600 hover:underline"
-                >
-                  {" "}
-                  technova.io{" "}
-                </a>
+                {job.employer?.companyWebsite ? (
+                  <a
+                    href={
+                      job.employer.companyWebsite.startsWith("http")
+                        ? job.employer.companyWebsite
+                        : `https://${job.employer.companyWebsite}`
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-bold text-blue-600 hover:underline"
+                  >
+                    {job.employer.companyWebsite}
+                  </a>
+                ) : (
+                  <span className="text-sm font-bold text-gray-400">Not set</span>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-gray-400">
@@ -343,7 +422,7 @@ export default function JobDetailsPage() {
                   </span>
                 </div>
                 <span className="text-sm font-bold text-gray-900">
-                  {job.companyInfo.size}
+                  {job.employer?.companySize || "11-50 employees"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -354,27 +433,9 @@ export default function JobDetailsPage() {
                   </span>
                 </div>
                 <span className="text-sm font-bold text-gray-900">
-                  {job.companyInfo.industry}
+                  {job.employer?.companyIndustry || "Software & Technology"}
                 </span>
               </div>
-            </div>
-          </div>
-
-          {/* Benefits Card */}
-          <div className="bg-gray-900 rounded-4xl p-8 text-white">
-            <h3 className="text-xl font-bold mb-6">Perks & Benefits</h3>
-            <div className="space-y-4">
-              {job.benefits.slice(0, 4).map((benefit, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="h-2 w-2 rounded-full bg-blue-400" />
-                  <span className="text-sm font-medium text-gray-300">
-                    {benefit}
-                  </span>
-                </div>
-              ))}
-              <p className="text-blue-400 text-xs font-bold uppercase tracking-widest pt-2 cursor-pointer hover:text-blue-300">
-                + See all benefits
-              </p>
             </div>
           </div>
         </div>

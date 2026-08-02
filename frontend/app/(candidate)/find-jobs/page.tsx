@@ -1,119 +1,108 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, ChevronDown, LayoutGrid, List } from "lucide-react";
-import JobCard from "@/components/JobCard";
+import { Search, MapPin, ChevronDown, LayoutGrid, List, Loader2 } from "lucide-react";
+import JobCard, { Job } from "@/components/JobCard";
 import SalaryRangeSlider from "@/components/SalaryRangeSlider";
-
-const JOBS = [
-  {
-    id: 1,
-    title: "Senior Software Engineer",
-    company: "TechNova Solutions",
-    location: "San Francisco, USA",
-    type: "Full-Time",
-    category: "IT & Software",
-    date: "5th Jul 2025",
-    salary: "$60k/m",
-    status: "Applied",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=TN&backgroundColor=0284c7",
-  },
-  {
-    id: 2,
-    title: "UX/UI Designer",
-    company: "BlueGrid Technologies",
-    location: "Berlin, Germany",
-    type: "Full-Time",
-    category: "Design",
-    date: "5th Jul 2025",
-    salary: "$65k/m",
-    status: "Applied",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=BG&backgroundColor=7c3aed",
-  },
-  {
-    id: 3,
-    title: "Digital Marketing Specialist",
-    company: "PixelForge Studios",
-    location: "London, UK",
-    type: "Remote",
-    category: "Marketing",
-    date: "4th Jul 2025",
-    salary: "$55k/m",
-    status: "Apply Now",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=PF&backgroundColor=db2777",
-  },
-  {
-    id: 4,
-    title: "Sales Manager",
-    company: "NeoHire Labs",
-    location: "Remote",
-    type: "Full-Time",
-    category: "Sales",
-    date: "3rd Jul 2025",
-    salary: "$70k/m",
-    status: "Apply Now",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=NH&backgroundColor=2563eb",
-  },
-];
+import { useJobs, useSavedJobs, useToggleSaveJob } from "@/features/jobs/hooks";
 
 export default function FindJobsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
-  const [savedJobs, setSavedJobs] = useState<number[]>([]);
-  const [appliedJobs, setAppliedJobs] = useState<number[]>([]);
-  const [filteredJobs, setFilteredJobs] = useState(JOBS);
-  const [jobTypeFilters, setJobTypeFilters] = useState<Record<string, boolean>>(
-    {
-      Remote: false,
-      "Full-Time": false,
-      "Part-Time": false,
-      Contract: false,
-      Internship: false,
-    },
-  );
-  const [salaryRange, setSalaryRange] = useState({ min: 0, max: 200 });
-  const [searchQuery, setSearchQuery] = useState("front");
+  const [appliedJobs, setAppliedJobs] = useState<(string | number)[]>([]);
+
+  const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("");
+
+  const [jobTypeFilters, setJobTypeFilters] = useState<Record<string, boolean>>({
+    Remote: false,
+    "Full-Time": false,
+    "Part-Time": false,
+    Contract: false,
+    Internship: false,
+  });
+
+  const [salaryRange, setSalaryRange] = useState({ min: 0, max: 200 });
   const [expandedFilters, setExpandedFilters] = useState({
     jobType: true,
     salary: false,
   });
 
-  const toggleSaveJob = (id: number) => {
-    setSavedJobs((prev) =>
-      prev.includes(id) ? prev.filter((jobId) => jobId !== id) : [...prev, id],
-    );
+  // Calculate selected types for backend query
+  const selectedTypes = Object.keys(jobTypeFilters).filter((key) => jobTypeFilters[key]);
+  const activeTypeFilter = selectedTypes.length === 1 ? selectedTypes[0] : undefined;
+
+  // Fetch jobs and saved jobs from backend
+  const { data: jobsData, isLoading: isJobsLoading, isError } = useJobs({
+    search: searchQuery || undefined,
+    location: location || undefined,
+    type: activeTypeFilter,
+  });
+
+  const { data: savedJobsData } = useSavedJobs();
+  const toggleSaveMutation = useToggleSaveJob();
+
+  // Extract saved job IDs from backend response
+  const savedJobIds: (string | number)[] = (savedJobsData?.savedJobs || []).map(
+    (sj: any) => sj.jobId || sj.job?.id
+  );
+
+  // Map backend jobs to component format
+  const rawJobs = jobsData?.jobs || [];
+  const mappedJobs: Job[] = rawJobs.map((j: any) => {
+    const companyName = j.employer?.companyName || j.employer?.name || "Tech Company";
+    const formattedDate = j.createdAt
+      ? new Date(j.createdAt).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "Recently";
+
+    return {
+      id: j.id,
+      title: j.title,
+      company: companyName,
+      location: j.location,
+      type: j.type || "Full-Time",
+      category: "Software & Tech",
+      date: formattedDate,
+      salary: j.salaryRange || "Competitive",
+      logo: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(companyName)}&backgroundColor=0284c7`,
+    };
+  });
+
+  // Client-side additional filtering (for multi-type or salary range client refinement)
+  const filteredJobs = mappedJobs.filter((job) => {
+    const matchesTitle =
+      !searchQuery ||
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesLocation =
+      !location || job.location.toLowerCase().includes(location.toLowerCase());
+
+    const hasSelectedTypes = Object.values(jobTypeFilters).some((v) => v);
+    const matchesType =
+      !hasSelectedTypes ||
+      Object.keys(jobTypeFilters).some(
+        (type) =>
+          jobTypeFilters[type as keyof typeof jobTypeFilters] &&
+          job.type.toLowerCase() === type.toLowerCase()
+      );
+
+    return matchesTitle && matchesLocation && matchesType;
+  });
+
+  const toggleSaveJob = (id: string | number) => {
+    const isSaved = savedJobIds.includes(id);
+    toggleSaveMutation.mutate({ jobId: String(id), isSaved });
   };
 
-  const toggleApplyJob = (id: number) => {
+  const toggleApplyJob = (id: string | number) => {
     setAppliedJobs((prev) =>
-      prev.includes(id) ? prev.filter((jobId) => jobId !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((jobId) => jobId !== id) : [...prev, id]
     );
-  };
-
-  const handleSearch = () => {
-    let results = JOBS.filter((job) => {
-      const matchesTitle =
-        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job.category.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesLocation =
-        !location ||
-        job.location.toLowerCase().includes(location.toLowerCase());
-      const hasSelectedTypes = Object.values(jobTypeFilters).some((v) => v);
-      const matchesType =
-        !hasSelectedTypes ||
-        Object.keys(jobTypeFilters).some(
-          (type) =>
-            jobTypeFilters[type as keyof typeof jobTypeFilters] &&
-            job.type === type,
-        );
-      const minSalary = salaryRange.min;
-      const maxSalary = salaryRange.max;
-      const jobSalary = parseInt(job.salary.replace(/[^0-9]/g, ""));
-      const matchesSalary = jobSalary >= minSalary && jobSalary <= maxSalary;
-
-      return matchesTitle && matchesLocation && matchesType && matchesSalary;
-    });
-    setFilteredJobs(results);
   };
 
   const handleClearAll = () => {
@@ -127,7 +116,6 @@ export default function FindJobsPage() {
     setSalaryRange({ min: 0, max: 200 });
     setSearchQuery("");
     setLocation("");
-    setFilteredJobs(JOBS);
   };
 
   const handleJobTypeChange = (type: string) => {
@@ -180,8 +168,8 @@ export default function FindJobsPage() {
             />
           </div>
           <button
-            onClick={handleSearch}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-95 transition-all text-sm sm:text-base"
+            onClick={() => {}}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 active:scale-95 transition-all text-sm sm:text-base cursor-pointer"
           >
             Search Jobs
           </button>
@@ -284,45 +272,53 @@ export default function FindJobsPage() {
             <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
               <button
                 onClick={() => setView("grid")}
-                className={`p-2 rounded-lg transition-all ${view === "grid" ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
+                className={`p-2 rounded-lg transition-all cursor-pointer ${view === "grid" ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
               >
                 <LayoutGrid className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setView("list")}
-                className={`p-2 rounded-lg transition-all ${view === "list" ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
+                className={`p-2 rounded-lg transition-all cursor-pointer ${view === "list" ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
               >
                 <List className="h-5 w-5" />
               </button>
             </div>
           </div>
 
-          {/* Job Grid */}
-          <div
-            className={`grid gap-5 sm:gap-6 ${view === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
-          >
-            {filteredJobs.length > 0 ? (
-              filteredJobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  isSaved={savedJobs.includes(job.id)}
-                  onSaveToggle={toggleSaveJob}
-                  onApply={toggleApplyJob}
-                  isApplied={
-                    appliedJobs.includes(job.id) || job.status === "Applied"
-                  }
-                  view={view}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500 font-semibold">
-                  No jobs found. Try adjusting your filters.
-                </p>
-              </div>
-            )}
-          </div>
+          {/* Loading state */}
+          {isJobsLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-500 font-medium">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span>Loading jobs...</span>
+            </div>
+          ) : (
+            /* Job Grid */
+            <div
+              className={`grid gap-5 sm:gap-6 ${view === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
+            >
+              {filteredJobs.length > 0 ? (
+                filteredJobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    isSaved={savedJobIds.includes(job.id)}
+                    onSaveToggle={toggleSaveJob}
+                    onApply={toggleApplyJob}
+                    isApplied={
+                      appliedJobs.includes(job.id) || job.status === "Applied"
+                    }
+                    view={view}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12 bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+                  <p className="text-gray-500 font-semibold">
+                    No jobs found. Try adjusting your search or filters.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </>

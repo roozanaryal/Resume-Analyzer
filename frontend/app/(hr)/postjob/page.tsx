@@ -1,9 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Briefcase, MapPin, Clock, DollarSign, CheckCircle2 } from "lucide-react";
+import { Briefcase, MapPin, Clock, DollarSign, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { usePostJob } from "@/features/jobs/hooks";
+import { useUser } from "@/features/auth/hooks";
 
 export default function PostJobPage() {
+  const router = useRouter();
+  const { data: user, isLoading: isUserLoading } = useUser();
+  const postJobMutation = usePostJob();
+
   const [title, setTitle] = useState("");
   const [department, setDepartment] = useState("");
   const [location, setLocation] = useState("");
@@ -14,23 +21,116 @@ export default function PostJobPage() {
   const [responsibilities, setResponsibilities] = useState("");
   const [qualifications, setQualifications] = useState("");
   const [benefits, setBenefits] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setMessage("Job posted successfully!");
-    window.setTimeout(() => setMessage(null), 3000);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    // Validation
+    if (!title.trim()) {
+      setErrorMessage("Job title is required.");
+      return;
+    }
+    if (!location.trim()) {
+      setErrorMessage("Location is required.");
+      return;
+    }
+    if (!description.trim() && !responsibilities.trim()) {
+      setErrorMessage("Job description is required (at least 10 characters).");
+      return;
+    }
+
+    // Build comprehensive description
+    let fullDescription = description.trim();
+    const extraSections: string[] = [];
+
+    if (department.trim()) extraSections.push(`Department: ${department.trim()}`);
+    if (experience.trim()) extraSections.push(`Experience Level: ${experience.trim()}`);
+    if (responsibilities.trim()) extraSections.push(`Key Responsibilities:\n${responsibilities.trim()}`);
+    if (qualifications.trim()) extraSections.push(`Qualifications:\n${qualifications.trim()}`);
+    if (benefits.trim()) extraSections.push(`Perks & Benefits:\n${benefits.trim()}`);
+
+    if (extraSections.length > 0) {
+      if (fullDescription) {
+        fullDescription += "\n\n" + extraSections.join("\n\n");
+      } else {
+        fullDescription = extraSections.join("\n\n");
+      }
+    }
+
+    if (fullDescription.length < 10) {
+      setErrorMessage("Job description must be at least 10 characters long.");
+      return;
+    }
+
+    try {
+      await postJobMutation.mutateAsync({
+        title: title.trim(),
+        description: fullDescription,
+        location: location.trim(),
+        salaryRange: salaryRange.trim() || undefined,
+        type: employmentType,
+      });
+
+      setSuccessMessage("Job posted successfully!");
+
+      // Reset form fields
+      setTitle("");
+      setDepartment("");
+      setLocation("");
+      setSalaryRange("");
+      setExperience("");
+      setDescription("");
+      setResponsibilities("");
+      setQualifications("");
+      setBenefits("");
+
+      setTimeout(() => {
+        router.push("/manage-jobs");
+      }, 1500);
+    } catch (err: any) {
+      const serverMsg =
+        err?.response?.data?.message ||
+        err?.response?.data?.errors?.[0]?.msg ||
+        "Failed to post job. Please check all fields and try again.";
+      setErrorMessage(serverMsg);
+    }
   };
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-3 text-gray-500 font-medium">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
+      {/* Background Decor */}
       <div className="fixed top-[-10%] left-[-10%] h-80 w-[320px] rounded-full bg-blue-50/70 blur-3xl pointer-events-none" />
       <div className="fixed right-[-5%] top-[18%] h-70 w-70 rounded-full bg-violet-50/70 blur-3xl pointer-events-none" />
 
-      {message && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-xl">
-          <CheckCircle2 className="h-5 w-5" />
-          {message}
+      {/* Success Banner */}
+      {successMessage && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-xl animate-in fade-in slide-in-from-top-2">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+          {successMessage}
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {errorMessage && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700 shadow-xl animate-in fade-in slide-in-from-top-2">
+          <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+          {errorMessage}
         </div>
       )}
 
@@ -51,8 +151,11 @@ export default function PostJobPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block">
-                  <span className="text-sm font-semibold text-gray-700">Job Title</span>
+                  <span className="text-sm font-semibold text-gray-700">
+                    Job Title <span className="text-rose-500">*</span>
+                  </span>
                   <input
+                    required
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
                     placeholder="Senior Product Designer"
@@ -73,10 +176,13 @@ export default function PostJobPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <label className="block">
-                  <span className="text-sm font-semibold text-gray-700">Location</span>
-                  <div className="mt-2 flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3">
-                    <MapPin className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm font-semibold text-gray-700">
+                    Location <span className="text-rose-500">*</span>
+                  </span>
+                  <div className="mt-2 flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-200">
+                    <MapPin className="h-4 w-4 text-blue-500 shrink-0" />
                     <input
+                      required
                       value={location}
                       onChange={(event) => setLocation(event.target.value)}
                       placeholder="Remote, NYC, London"
@@ -101,8 +207,8 @@ export default function PostJobPage() {
 
                 <label className="block">
                   <span className="text-sm font-semibold text-gray-700">Salary Range</span>
-                  <div className="mt-2 flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3">
-                    <DollarSign className="h-4 w-4 text-green-500" />
+                  <div className="mt-2 flex items-center gap-2 rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 focus-within:border-blue-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-200">
+                    <DollarSign className="h-4 w-4 text-green-500 shrink-0" />
                     <input
                       value={salaryRange}
                       onChange={(event) => setSalaryRange(event.target.value)}
@@ -143,8 +249,11 @@ export default function PostJobPage() {
               </div>
 
               <label className="block">
-                <span className="text-sm font-semibold text-gray-700">Job Description</span>
+                <span className="text-sm font-semibold text-gray-700">
+                  Job Description <span className="text-rose-500">*</span>
+                </span>
                 <textarea
+                  required
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={5}
@@ -163,7 +272,7 @@ export default function PostJobPage() {
                   className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
                 />
               </label>
- 
+
               <label className="block">
                 <span className="text-sm font-semibold text-gray-700">Perks & Benefits</span>
                 <textarea
@@ -178,10 +287,20 @@ export default function PostJobPage() {
 
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              disabled={postJobMutation.isPending}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
-              <Briefcase className="h-4 w-4" />
-              Post Job
+              {postJobMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Publishing Job...
+                </>
+              ) : (
+                <>
+                  <Briefcase className="h-4 w-4" />
+                  Post Job
+                </>
+              )}
             </button>
           </form>
 
@@ -193,21 +312,21 @@ export default function PostJobPage() {
               </div>
               <div className="mt-6 space-y-4">
                 <div className="flex items-center gap-3 rounded-2xl bg-white p-4">
-                  <MapPin className="h-5 w-5 text-blue-500" />
+                  <MapPin className="h-5 w-5 text-blue-500 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Location</p>
                     <p className="text-sm text-gray-500">{location || "Remote / Flexible"}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-2xl bg-white p-4">
-                  <Clock className="h-5 w-5 text-purple-500" />
+                  <Clock className="h-5 w-5 text-purple-500 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Employment Type</p>
                     <p className="text-sm text-gray-500">{employmentType}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-2xl bg-white p-4">
-                  <DollarSign className="h-5 w-5 text-green-500" />
+                  <DollarSign className="h-5 w-5 text-green-500 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Salary</p>
                     <p className="text-sm text-gray-500">{salaryRange || "Competitive"}</p>
@@ -235,9 +354,9 @@ export default function PostJobPage() {
                   <p className="mt-2 text-sm text-gray-500">{department || "Design Team"} · {location || "Remote"}</p>
                 </div>
                 <div className="space-y-3 text-sm text-gray-600">
-                  <p>{description || "Write a concise description of the role, responsibilities, and team culture to help align top candidates."}</p>
-                  <p className="text-gray-500">Qualifications: {qualifications || "Portfolio, UX research, design systems"}</p>
-                  <p className="text-gray-500 text-xs font-medium">Benefits: {benefits || "Flexible hours, Heathcare"}</p>
+                  <p className="whitespace-pre-line">{description || "Write a concise description of the role, responsibilities, and team culture to help align top candidates."}</p>
+                  {qualifications && <p className="text-gray-500">Qualifications: {qualifications}</p>}
+                  {benefits && <p className="text-gray-500 text-xs font-medium">Benefits: {benefits}</p>}
                 </div>
               </div>
             </div>
