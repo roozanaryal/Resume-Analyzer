@@ -16,6 +16,7 @@ export interface Job {
   employerId: string;
   createdAt: string;
   employer?: {
+    id?: string;
     name?: string;
     email?: string;
     companyName?: string;

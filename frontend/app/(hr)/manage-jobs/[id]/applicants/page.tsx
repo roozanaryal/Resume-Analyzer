@@ -20,19 +20,34 @@ import {
   ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useJobApplicants, useUpdateApplicationStatus } from "@/features/jobs/hooks";
+import { useStartConversation } from "@/features/messages/hooks";
 
 export default function ApplicantsPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
 
   const { data, isLoading, isError } = useJobApplicants(id);
   const updateStatusMutation = useUpdateApplicationStatus();
+  const startConversationMutation = useStartConversation();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
+
+  const handleStartChat = (userId: string) => {
+    if (!userId) return;
+    startConversationMutation.mutate(userId, {
+      onSuccess: (resData) => {
+        router.push(`/hr-messages?roomId=${resData.chatRoomId}`);
+      },
+      onError: () => {
+        alert("Failed to start conversation with candidate.");
+      },
+    });
+  };
 
   const rawApplications = data?.applications || [];
 
@@ -47,6 +62,7 @@ export default function ApplicantsPage() {
 
     return {
       id: app.id,
+      userId: app.userId,
       name: app.name || "Candidate",
       role: data?.jobTitle || "Applicant",
       location: "Remote / On-site",
@@ -270,13 +286,14 @@ export default function ApplicantsPage() {
                       <FileText className="h-4 w-4" />
                       Resume
                     </button>
-                    <Link
-                      href="/hr-messages"
-                      className="px-3 bg-violet-50 text-violet-600 font-bold py-3 rounded-xl hover:bg-violet-100 transition-colors text-xs sm:text-sm flex items-center justify-center cursor-pointer ring-1 ring-violet-200"
+                    <button
+                      onClick={() => handleStartChat(app.userId)}
+                      disabled={startConversationMutation.isPending}
+                      className="px-3 bg-violet-50 text-violet-600 font-bold py-3 rounded-xl hover:bg-violet-100 transition-colors text-xs sm:text-sm flex items-center justify-center cursor-pointer ring-1 ring-violet-200 disabled:opacity-50"
                       title="Send Message"
                     >
                       <MessageSquare className="h-4 w-4" />
-                    </Link>
+                    </button>
                     <button
                       onClick={() => setSelectedApplicant(app)}
                       className="flex-1 bg-linear-to-r from-blue-600 to-violet-600 text-white font-bold py-3 rounded-xl hover:shadow-xl transition-all text-xs sm:text-sm shadow-md cursor-pointer active:scale-95"

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Briefcase, Bookmark, LogOut, MessageSquare, User as UserIcon } from "lucide-react";
+import { Briefcase, LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser, useLogout } from "@/features/auth/hooks";
@@ -57,21 +57,6 @@ export default function CandidateNavbar() {
 
         {/* User Options Section */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <Link
-            href="/messages"
-            className="relative text-gray-400 hover:text-blue-500 transition-colors cursor-pointer hidden sm:block p-1"
-            title="Messages"
-          >
-            <MessageSquare className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-          </Link>
-          <Link
-            href="/saved"
-            className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer hidden sm:block p-1"
-            title="Saved Jobs"
-          >
-            <Bookmark className="h-5 w-5" />
-          </Link>
           <div className="flex items-center gap-3 pl-4 border-l border-gray-100 h-10">
             <div className="text-right hidden sm:block ml-2">
               <p className="text-sm font-bold text-gray-900 tracking-tight leading-none mb-0.5">

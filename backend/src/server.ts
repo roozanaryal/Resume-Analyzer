@@ -4,6 +4,7 @@ import { connectDB, disconnect } from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -41,6 +42,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
+app.use("/api/messages", messageRoutes);
 
 
 
