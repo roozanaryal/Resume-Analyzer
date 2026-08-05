@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Save,
   Download,
+  Building2,
 } from "lucide-react";
 import { useUser, useUpdateProfile, useUploadResume } from "@/features/auth/hooks";
 
@@ -28,6 +29,7 @@ export default function CandidateProfilePage() {
   const [experience, setExperience] = useState("");
   const [education, setEducation] = useState("");
   const [preferredJobType, setPreferredJobType] = useState("");
+  const [preferredIndustry, setPreferredIndustry] = useState("");
   
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [saveStatus, setSaveStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -41,6 +43,7 @@ export default function CandidateProfilePage() {
       setExperience(user.experience || "");
       setEducation(user.education || "");
       setPreferredJobType(user.preferredJobType || "");
+      setPreferredIndustry(user.preferredIndustry || "");
     }
   }, [user]);
 
@@ -55,6 +58,7 @@ export default function CandidateProfilePage() {
         experience,
         education,
         preferredJobType,
+        preferredIndustry,
       });
       setSaveStatus({ type: "success", message: "Profile updated successfully!" });
       setTimeout(() => setSaveStatus(null), 4000);
@@ -313,6 +317,21 @@ export default function CandidateProfilePage() {
                 value={preferredJobType}
                 onChange={(e) => setPreferredJobType(e.target.value)}
                 placeholder="e.g. Fullstack Developer, Manager, QA Engineer"
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+              />
+            </div>
+
+            {/* Preferred Industry */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-gray-700 flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                Preferred Industry (for Recommendations)
+              </label>
+              <input
+                type="text"
+                value={preferredIndustry}
+                onChange={(e) => setPreferredIndustry(e.target.value)}
+                placeholder="e.g. Tech, Manufacturing, Finance, Healthcare, Service"
                 className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
               />
             </div>

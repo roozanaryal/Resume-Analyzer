@@ -30,6 +30,7 @@ export interface User {
   experience?: string;
   education?: string;
   preferredJobType?: string;
+  preferredIndustry?: string;
   createdAt?: string;
   updatedAt?: string;
 }

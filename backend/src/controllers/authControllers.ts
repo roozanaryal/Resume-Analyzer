@@ -102,7 +102,7 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
     return res.status(401).json({ message: "Not authenticated" });
   }
 
-  const { name, companyName, bio, companyWebsite, companySize, companyIndustry, skills, experience, education, preferredJobType } = req.body;
+  const { name, companyName, bio, companyWebsite, companySize, companyIndustry, skills, experience, education, preferredJobType, preferredIndustry } = req.body;
 
   try {
     const updatedUser = await prisma.user.update({
@@ -118,6 +118,7 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
         ...(experience !== undefined && { experience }),
         ...(education !== undefined && { education }),
         ...(preferredJobType !== undefined && { preferredJobType }),
+        ...(preferredIndustry !== undefined && { preferredIndustry }),
       },
       select: {
         id: true,
@@ -130,6 +131,7 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
         experience: true,
         education: true,
         preferredJobType: true,
+        preferredIndustry: true,
         companyName: true,
         companyWebsite: true,
         companySize: true,
@@ -188,6 +190,7 @@ export const uploadResumeToProfile = async (req: Request & { user?: any }, res: 
         experience: true,
         education: true,
         preferredJobType: true,
+        preferredIndustry: true,
         companyName: true,
         companyWebsite: true,
         companySize: true,

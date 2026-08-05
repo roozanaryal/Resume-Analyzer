@@ -42,6 +42,7 @@ export const protectRoute = async (req: AuthRequest, res: Response, next: NextFu
         experience: true,
         education: true,
         preferredJobType: true,
+        preferredIndustry: true,
         createdAt: true,
         updatedAt: true,
       },

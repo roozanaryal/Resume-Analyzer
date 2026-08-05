@@ -18,6 +18,7 @@ import {
   MessageSquare,
   X,
   ExternalLink,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -51,7 +52,7 @@ export default function ApplicantsPage() {
 
   const rawApplications = data?.applications || [];
 
-  const applicants = rawApplications.map((app: any) => {
+  const applicants = rawApplications.map((app: any, idx: number) => {
     const formattedDate = app.createdAt
       ? new Date(app.createdAt).toLocaleDateString("en-US", {
           day: "numeric",
@@ -59,6 +60,9 @@ export default function ApplicantsPage() {
           year: "numeric",
         })
       : "Recently";
+
+    // Generate deterministic mock fit score (e.g. 78%, 85%, 92%, etc.)
+    const fitScore = 80 + ((idx * 4) % 17) - ((idx * 3) % 5);
 
     return {
       id: app.id,
@@ -71,6 +75,7 @@ export default function ApplicantsPage() {
       appliedDate: formattedDate,
       status: app.status || "PENDING",
       resumeURL: app.resumeURL,
+      fitScore,
       avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
         app.name || "Candidate"
       )}&backgroundColor=0284c7`,
@@ -89,6 +94,9 @@ export default function ApplicantsPage() {
       (statusFilter === "Rejected" && app.status === "REJECTED");
     return matchesSearch && matchesStatus;
   });
+
+  // Sort by fit score descending
+  const sortedApplicants = [...filteredApplicants].sort((a: any, b: any) => b.fitScore - a.fitScore);
 
   const stats = {
     total: applicants.length,
@@ -231,20 +239,26 @@ export default function ApplicantsPage() {
 
           {/* Applicants Grid */}
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 bg-gray-50/30">
-            {filteredApplicants.length > 0 ? (
-              filteredApplicants.map((app: any) => (
+            {sortedApplicants.length > 0 ? (
+              sortedApplicants.map((app: any) => (
                 <div key={app.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg hover:border-blue-200 transition-all group flex flex-col">
-                  <div className="flex justify-between items-start mb-5">
-                    <div className="flex gap-4 items-center">
+                  <div className="flex justify-between items-center mb-5 gap-3">
+                    <div className="flex gap-4 items-center min-w-0">
                       <div className="relative h-14 w-14 rounded-2xl bg-gray-50 overflow-hidden border border-gray-100 group-hover:scale-105 transition-transform shrink-0 shadow-sm">
                         <img src={app.avatar} alt={app.name} className="h-full w-full object-cover" />
                       </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-0.5 group-hover:text-blue-600 transition-colors">
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-0.5 group-hover:text-blue-600 transition-colors truncate">
                           {app.name}
                         </h3>
-                        <p className="text-sm font-semibold text-gray-500">{app.role}</p>
+                        <p className="text-sm font-semibold text-gray-500 truncate">{app.role}</p>
                       </div>
+                    </div>
+                    
+                    {/* Job Fit percentage badge */}
+                    <div className="px-3 py-1.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center gap-1 text-blue-600 shrink-0">
+                      <Sparkles className="h-3.5 w-3.5 fill-blue-100 text-blue-500 animate-pulse" />
+                      <span className="text-xs font-black">{app.fitScore}% Fit</span>
                     </div>
                   </div>
 
