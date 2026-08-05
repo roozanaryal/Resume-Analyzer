@@ -134,16 +134,18 @@ const JobCard: React.FC<JobCardProps> = ({
               {job.salary}
             </p>
           </div>
-          <div
-            className={`flex items-center gap-3 transition-transform group-hover:translate-x-1 ${isListView ? "hidden md:flex" : ""}`}
-          >
-            <span className="text-xs font-bold text-blue-600 uppercase tracking-widest hidden group-hover:block transition-all animate-in fade-in slide-in-from-left-2">
-              View Details
-            </span>
-            <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-              <ArrowRight className="h-5 w-5" />
+          {!isListView && (
+            <div
+              className="flex items-center gap-3 transition-transform group-hover:translate-x-1"
+            >
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-widest hidden group-hover:block transition-all animate-in fade-in slide-in-from-left-2">
+                View Details
+              </span>
+              <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                <ArrowRight className="h-5 w-5" />
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Apply button for list view or as a discrete action */}
           {isListView && (

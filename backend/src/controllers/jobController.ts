@@ -112,7 +112,7 @@ export const postJob = async (
         .json({ message: "Access denied. Only HR or Admin can post jobs." });
     }
 
-    const { title, description, location, salaryRange, type } = req.body;
+    const { title, description, location, salaryRange, type, skillsRequired, experienceRequired } = req.body;
     const employerId = req.user?.id;
 
     if (!employerId) {
@@ -126,6 +126,8 @@ export const postJob = async (
         location,
         salaryRange,
         type,
+        skillsRequired,
+        experienceRequired,
         employerId,
       },
     });
@@ -376,7 +378,7 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
   try {
     const id = req.params.id as string;
     const userId = req.user?.id;
-    const { title, description, location, salaryRange, type } = req.body;
+    const { title, description, location, salaryRange, type, skillsRequired, experienceRequired } = req.body;
 
     const job = await prisma.job.findUnique({ where: { id } });
 
@@ -399,6 +401,8 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
         location,
         salaryRange,
         type,
+        skillsRequired,
+        experienceRequired,
       },
     });
 

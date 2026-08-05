@@ -4,6 +4,8 @@ export interface PostJobInput {
   location: string;
   salaryRange?: string;
   type?: string;
+  skillsRequired?: string;
+  experienceRequired?: string;
 }
 
 export interface Job {
@@ -13,6 +15,8 @@ export interface Job {
   location: string;
   salaryRange?: string | null;
   type?: string | null;
+  skillsRequired?: string | null;
+  experienceRequired?: string | null;
   employerId: string;
   createdAt: string;
   employer?: {

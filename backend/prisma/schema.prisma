@@ -50,6 +50,8 @@ model Job {
   location    String
   salaryRange String?
   type        String?
+  skillsRequired     String?
+  experienceRequired String?
 
   employerId   String
   employer     User          @relation("EmployerJob", fields: [employerId], references: [id])

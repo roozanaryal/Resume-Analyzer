@@ -302,24 +302,19 @@ export default function CandidateProfilePage() {
               />
             </div>
 
-            {/* Preferred Job Type */}
+            {/* Preferred Job Role */}
             <div className="space-y-2">
               <label className="block text-sm font-bold text-gray-700 flex items-center gap-2">
                 <Briefcase className="h-4 w-4 text-blue-600" />
-                Preferred Job Type (for Recommendations)
+                Preferred Job Role / Title (for Recommendations)
               </label>
-              <select
+              <input
+                type="text"
                 value={preferredJobType}
                 onChange={(e) => setPreferredJobType(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 bg-white"
-              >
-                <option value="">Select a preferred job type...</option>
-                <option value="Full-Time">Full-Time</option>
-                <option value="Part-Time">Part-Time</option>
-                <option value="Internship">Internship</option>
-                <option value="Contract">Contract</option>
-                <option value="Remote">Remote</option>
-              </select>
+                placeholder="e.g. Fullstack Developer, Manager, QA Engineer"
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900"
+              />
             </div>
 
             {/* Save Button */}

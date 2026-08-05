@@ -21,6 +21,8 @@ export default function PostJobPage() {
   const [responsibilities, setResponsibilities] = useState("");
   const [qualifications, setQualifications] = useState("");
   const [benefits, setBenefits] = useState("");
+  const [skillsRequired, setSkillsRequired] = useState("");
+  const [experienceRequired, setExperienceRequired] = useState("");
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -74,6 +76,8 @@ export default function PostJobPage() {
         location: location.trim(),
         salaryRange: salaryRange.trim() || undefined,
         type: employmentType,
+        skillsRequired: skillsRequired.trim() || undefined,
+        experienceRequired: experienceRequired.trim() || undefined,
       });
 
       setSuccessMessage("Job posted successfully!");
@@ -88,6 +92,8 @@ export default function PostJobPage() {
       setResponsibilities("");
       setQualifications("");
       setBenefits("");
+      setSkillsRequired("");
+      setExperienceRequired("");
 
       setTimeout(() => {
         router.push("/manage-jobs");
@@ -243,6 +249,28 @@ export default function PostJobPage() {
                     value={qualifications}
                     onChange={(event) => setQualifications(event.target.value)}
                     placeholder="Portfolio, React, Figma"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-semibold text-gray-700">Work Experience Required (for database)</span>
+                  <input
+                    value={experienceRequired}
+                    onChange={(event) => setExperienceRequired(event.target.value)}
+                    placeholder="e.g. 3 years as Fullstack Developer"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-sm font-semibold text-gray-700">Skills Required (comma separated)</span>
+                  <input
+                    value={skillsRequired}
+                    onChange={(event) => setSkillsRequired(event.target.value)}
+                    placeholder="e.g. React, Node.js, AWS"
                     className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
                   />
                 </label>
