@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   MapPin,
@@ -28,11 +28,13 @@ import {
   useApplyToJob,
   useJobApplicationStatus,
 } from "@/features/jobs/hooks";
+import { useUser } from "@/features/auth/hooks";
 
 export default function JobDetailsPage() {
   const params = useParams();
   const id = params.id as string;
 
+  const { data: user } = useUser();
   const { data: job, isLoading, isError } = useJob(id);
   const { data: savedJobsData } = useSavedJobs();
   const { data: appStatusData } = useJobApplicationStatus(id);
@@ -40,6 +42,7 @@ export default function JobDetailsPage() {
   const applyMutation = useApplyToJob();
 
   const [resume, setResume] = useState<File | null>(null);
+  const [useProfileResume, setUseProfileResume] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +58,14 @@ export default function JobDetailsPage() {
   );
   const isSaved = savedJobIds.includes(id);
   const hasApplied = appStatusData?.hasApplied || false;
+  const hasProfileResume = !!user?.resumeURL;
+
+  // Sync state if user changes/loads
+  useEffect(() => {
+    if (user) {
+      setUseProfileResume(!!user.resumeURL);
+    }
+  }, [user]);
 
   const handleToggleSave = () => {
     if (id) {
@@ -66,10 +77,16 @@ export default function JobDetailsPage() {
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    const shouldApplyWithProfile = useProfileResume && hasProfileResume;
+    if (!shouldApplyWithProfile && !resume) {
+      setErrorMessage("Please upload a resume to apply.");
+      return;
+    }
+
     try {
       await applyMutation.mutateAsync({
         jobId: id,
-        resume,
+        resume: shouldApplyWithProfile ? null : resume,
       });
 
       setSuccessMessage("Application submitted successfully!");
@@ -291,37 +308,70 @@ export default function JobDetailsPage() {
                   Your Resume
                 </label>
 
-                {!resume ? (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full border-2 border-dashed border-blue-400/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 hover:border-white transition-all group"
-                  >
-                    <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <Upload className="h-6 w-6 text-white" />
+                {hasProfileResume && (
+                  <div className="mb-4 flex items-center gap-2 bg-white/10 p-3.5 rounded-2xl border border-white/20">
+                    <input
+                      type="checkbox"
+                      id="useProfileResumeCheckbox"
+                      checked={useProfileResume}
+                      onChange={(e) => setUseProfileResume(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label htmlFor="useProfileResumeCheckbox" className="text-xs font-bold text-white select-none cursor-pointer flex-1">
+                      Use my profile resume
+                    </label>
+                  </div>
+                )}
+
+                {useProfileResume && hasProfileResume ? (
+                  <div className="w-full bg-white/10 rounded-2xl p-4 flex items-center gap-4 border border-white/20">
+                    <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-500 flex items-center justify-center">
+                      <FileText className="h-6 w-6 text-white" />
                     </div>
-                    <p className="text-sm font-bold text-white mb-1">Click to upload</p>
-                    <p className="text-xs text-blue-200 font-medium">PDF, DOC, DOCX (Max. 5MB)</p>
+                    <div className="overflow-hidden flex-1">
+                      <p className="text-sm font-bold text-white truncate">
+                        {user.resumeURL?.split("/").pop()}
+                      </p>
+                      <p className="text-[10px] text-blue-200 font-bold uppercase tracking-wider mt-0.5">
+                        Saved in Profile
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="w-full bg-white/10 rounded-2xl p-4 flex items-center justify-between border border-white/20">
-                    <div className="flex items-center gap-4 overflow-hidden">
-                      <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-500 flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-white" />
+                  <>
+                    {!resume ? (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full border-2 border-dashed border-blue-400/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 hover:border-white transition-all group"
+                      >
+                        <div className="h-12 w-12 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <Upload className="h-6 w-6 text-white" />
+                        </div>
+                        <p className="text-sm font-bold text-white mb-1">Click to upload</p>
+                        <p className="text-xs text-blue-200 font-medium">PDF, DOC, DOCX (Max. 5MB)</p>
                       </div>
-                      <div className="overflow-hidden">
-                        <p className="text-sm font-bold text-white truncate">{resume.name}</p>
-                        <p className="text-xs text-blue-200 font-medium mt-0.5">
-                          {(resume.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                    ) : (
+                      <div className="w-full bg-white/10 rounded-2xl p-4 flex items-center justify-between border border-white/20">
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-500 flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-white" />
+                          </div>
+                          <div className="overflow-hidden">
+                            <p className="text-sm font-bold text-white truncate">{resume.name}</p>
+                            <p className="text-xs text-blue-200 font-medium mt-0.5">
+                              {(resume.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setResume(null)}
+                          className="h-8 w-8 shrink-0 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors text-blue-200 hover:text-white"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
                       </div>
-                    </div>
-                    <button
-                      onClick={() => setResume(null)}
-                      className="h-8 w-8 shrink-0 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors text-blue-200 hover:text-white"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                    )}
+                  </>
                 )}
 
                 <input

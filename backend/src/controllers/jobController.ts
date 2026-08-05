@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { validationResult } from "express-validator";
 import { prisma } from "../config/db.js";
+import fs from "fs";
+import path from "path";
 
 // Helper interface for authenticated requests
 interface AuthRequest extends Request {
@@ -480,6 +482,24 @@ export const applyToJob = async (req: AuthRequest, res: Response) => {
 
     if (req.file) {
       resumeURL = `/uploads/resumes/${req.file.filename}`;
+
+      // Delete old profile resume if it exists
+      const currentUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { resumeURL: true },
+      });
+
+      if (currentUser?.resumeURL) {
+        const oldFilePath = path.join(process.cwd(), currentUser.resumeURL);
+        if (fs.existsSync(oldFilePath)) {
+          try {
+            fs.unlinkSync(oldFilePath);
+          } catch (err) {
+            console.error("Failed to delete old resume file:", err);
+          }
+        }
+      }
+
       // Save resumeURL to candidate user profile as well
       await prisma.user.update({
         where: { id: userId },

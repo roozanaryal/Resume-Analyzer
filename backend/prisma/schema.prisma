@@ -26,6 +26,10 @@ model User {
   companyWebsite  String?
   companySize     String?
   companyIndustry String?
+  skills          String?
+  experience      String?
+  education       String?
+  preferredJobType String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

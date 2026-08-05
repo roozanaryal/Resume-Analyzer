@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { registerUser, loginUser, logoutUser, getMe, updateProfile } from "../controllers/authControllers.js";
+import { registerUser, loginUser, logoutUser, getMe, updateProfile, uploadResumeToProfile } from "../controllers/authControllers.js";
 import { protectRoute } from "../middlewares/protectRoute.js";
+import { uploadResume } from "../middlewares/upload.js";
 import { body } from "express-validator";
 
 const router: Router = Router();
@@ -28,6 +29,7 @@ router.post(
 
 router.get("/me", protectRoute, getMe);
 router.put("/profile", protectRoute, updateProfile);
+router.put("/profile/resume", protectRoute, uploadResume.single("resume"), uploadResumeToProfile);
 router.get("/logout", logoutUser);
 
 export default router;

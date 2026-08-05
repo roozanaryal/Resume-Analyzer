@@ -3,6 +3,8 @@ import { validationResult } from "express-validator";
 import { prisma } from "../config/db.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../utils/generateToken.js";
+import fs from "fs";
+import path from "path";
 
 export const registerUser = async (
   req: Request,
@@ -100,7 +102,7 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
     return res.status(401).json({ message: "Not authenticated" });
   }
 
-  const { name, companyName, bio, companyWebsite, companySize, companyIndustry } = req.body;
+  const { name, companyName, bio, companyWebsite, companySize, companyIndustry, skills, experience, education, preferredJobType } = req.body;
 
   try {
     const updatedUser = await prisma.user.update({
@@ -112,6 +114,10 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
         ...(companyWebsite !== undefined && { companyWebsite }),
         ...(companySize !== undefined && { companySize }),
         ...(companyIndustry !== undefined && { companyIndustry }),
+        ...(skills !== undefined && { skills }),
+        ...(experience !== undefined && { experience }),
+        ...(education !== undefined && { education }),
+        ...(preferredJobType !== undefined && { preferredJobType }),
       },
       select: {
         id: true,
@@ -120,6 +126,10 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
         role: true,
         bio: true,
         resumeURL: true,
+        skills: true,
+        experience: true,
+        education: true,
+        preferredJobType: true,
         companyName: true,
         companyWebsite: true,
         companySize: true,
@@ -133,6 +143,67 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
   } catch (error) {
     console.error("Error updating profile:", error);
     return res.status(500).json({ message: "Failed to update profile" });
+  }
+};
+
+export const uploadResumeToProfile = async (req: Request & { user?: any }, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Please upload a resume file" });
+  }
+
+  const resumeURL = `/uploads/resumes/${req.file.filename}`;
+
+  try {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { resumeURL: true },
+    });
+
+    if (currentUser?.resumeURL) {
+      const oldFilePath = path.join(process.cwd(), currentUser.resumeURL);
+      if (fs.existsSync(oldFilePath)) {
+        try {
+          fs.unlinkSync(oldFilePath);
+        } catch (err) {
+          console.error("Failed to delete old resume file:", err);
+        }
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { resumeURL },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        bio: true,
+        resumeURL: true,
+        skills: true,
+        experience: true,
+        education: true,
+        preferredJobType: true,
+        companyName: true,
+        companyWebsite: true,
+        companySize: true,
+        companyIndustry: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Resume uploaded successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error uploading resume:", error);
+    return res.status(500).json({ message: "Failed to upload resume" });
   }
 };
 

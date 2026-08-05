@@ -26,6 +26,10 @@ export interface User {
   companyWebsite?: string;
   companySize?: string;
   companyIndustry?: string;
+  skills?: string;
+  experience?: string;
+  education?: string;
+  preferredJobType?: string;
   createdAt?: string;
   updatedAt?: string;
 }

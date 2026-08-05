@@ -60,3 +60,14 @@ export const useUpdateProfile = () => {
     },
   });
 };
+
+export const useUploadResume = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (file: File) => authApi.uploadResume(file),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["user"], updatedUser);
+    },
+  });
+};

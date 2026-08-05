@@ -24,3 +24,14 @@ export const updateProfile = async (data: Partial<User>): Promise<User> => {
   const response = await api.put("/auth/profile", data);
   return response.data.user;
 };
+
+export const uploadResume = async (file: File): Promise<User> => {
+  const formData = new FormData();
+  formData.append("resume", file);
+  const response = await api.put("/auth/profile/resume", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data.user;
+};

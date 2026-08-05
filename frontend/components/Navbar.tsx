@@ -15,6 +15,7 @@ export default function CandidateNavbar() {
     { label: "Find Jobs", href: "/find-jobs" },
     { label: "Saved Jobs", href: "/saved" },
     { label: "Messages", href: "/messages" },
+    { label: "Profile", href: "/profile" },
   ];
 
   return (
