@@ -54,23 +54,92 @@ export const getJobs = async (req: Request, res: Response, next: NextFunction) =
     //   };
     // }
 
-    const [jobs, total] = await Promise.all([
-      prisma.job.findMany({
-        where,
+    let userContext = null;
+    let recommendedIndustries: string[] = [];
+
+    const token = req.cookies?.token || req.headers?.authorization?.split(" ")[1];
+    if (token) {
+      try {
+        const jwt = require("jsonwebtoken");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_secret") as { userId: string };
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.userId },
+          include: {
+            savedJobs: {
+              include: { job: { include: { employer: true } } }
+            }
+          }
+        });
+
+        if (user && user.role === "CANDIDATE") {
+          if (user.preferredIndustry) {
+            recommendedIndustries.push(user.preferredIndustry);
+          }
+          user.savedJobs.forEach(sj => {
+            if (sj.job.employer.companyIndustry) {
+              recommendedIndustries.push(sj.job.employer.companyIndustry);
+            }
+          });
+          // deduplicate and filter empty
+          recommendedIndustries = [...new Set(recommendedIndustries)].filter(Boolean);
+        }
+      } catch (err) {
+        // ignore invalid token for public route
+      }
+    }
+
+    let recommendedWhere: any = null;
+    let otherWhere: any = where;
+    let totalRecommended = 0;
+
+    // Only apply recommendations if no explicit search filters are provided
+    if (recommendedIndustries.length > 0 && !search && !location && !type) {
+      const indConditions = recommendedIndustries.map(ind => ({
+        employer: { companyIndustry: { equals: ind, mode: "insensitive" as const } }
+      }));
+      
+      recommendedWhere = { ...where, OR: indConditions };
+      otherWhere = { ...where, NOT: { OR: indConditions } };
+
+      totalRecommended = await prisma.job.count({ where: recommendedWhere });
+    }
+
+    const totalOther = await prisma.job.count({ where: otherWhere });
+    const total = totalRecommended + totalOther;
+
+    let jobs: any[] = [];
+
+    if (recommendedWhere && skip < totalRecommended) {
+      const recJobs = await prisma.job.findMany({
+        where: recommendedWhere,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: {
-          employer: {
-            select: {
-              name: true,
-              companyName: true,
-            },
-          },
-        },
-      }),
-      prisma.job.count({ where }),
-    ]);
+        include: { employer: { select: { name: true, companyName: true } } },
+      });
+      jobs = [...recJobs];
+
+      if (jobs.length < limit) {
+        const remaining = limit - jobs.length;
+        const othJobs = await prisma.job.findMany({
+          where: otherWhere,
+          skip: 0,
+          take: remaining,
+          orderBy: { createdAt: "desc" },
+          include: { employer: { select: { name: true, companyName: true } } },
+        });
+        jobs = [...jobs, ...othJobs];
+      }
+    } else {
+      const actualSkip = recommendedWhere ? skip - totalRecommended : skip;
+      jobs = await prisma.job.findMany({
+        where: otherWhere,
+        skip: actualSkip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: { employer: { select: { name: true, companyName: true } } },
+      });
+    }
 
     return res.status(200).json({
       success: true,
