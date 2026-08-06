@@ -1,19 +1,29 @@
 "use client";
 
 import { useUser } from "@/features/auth/hooks";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login");
+    if (!isLoading) {
+      if (!user) {
+        router.push("/login");
+      } else if (pathname !== "/onboarding") {
+        const isCandidateIncomplete = user.role === "CANDIDATE" && (!user.skills || !user.preferredIndustry);
+        const isHRIncomplete = user.role === "HR" && (!user.companyName || !user.companyIndustry);
+        
+        if (isCandidateIncomplete || isHRIncomplete) {
+          router.push("/onboarding");
+        }
+      }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, pathname]);
 
   if (isLoading) {
     return (

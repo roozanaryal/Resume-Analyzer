@@ -13,10 +13,17 @@ export default function SignupPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(RegisterSchema),
+    defaultValues: {
+      role: "CANDIDATE",
+    },
   });
+
+  const watchRole = watch("role");
 
   const onSubmit = (data: RegisterInput) => {
     registerUser(data);
@@ -53,6 +60,38 @@ export default function SignupPage() {
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-2.5 sm:space-y-3"
           >
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                I want to register as
+              </label>
+              <div className="grid grid-cols-2 gap-3 mb-2.5">
+                <button
+                  type="button"
+                  onClick={() => setValue("role", "CANDIDATE")}
+                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    watchRole === "CANDIDATE"
+                      ? "border-blue-600 bg-blue-50/50 text-blue-600 ring-2 ring-blue-500/20"
+                      : "border-gray-200 hover:border-gray-300 text-gray-500 bg-white"
+                  }`}
+                >
+                  <User className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-bold">Candidate / Job Seeker</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue("role", "HR")}
+                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    watchRole === "HR"
+                      ? "border-blue-600 bg-blue-50/50 text-blue-600 ring-2 ring-blue-500/20"
+                      : "border-gray-200 hover:border-gray-300 text-gray-500 bg-white"
+                  }`}
+                >
+                  <Briefcase className="h-5 w-5 mb-1" />
+                  <span className="text-xs font-bold">HR / Employer</span>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">
                 Full Name

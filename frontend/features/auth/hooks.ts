@@ -19,7 +19,11 @@ export const useLogin = () => {
     mutationFn: (data: LoginInput) => authApi.login(data),
     onSuccess: (data) => {
       queryClient.setQueryData(["user"], data.user);
-      router.push("/");
+      if (data.user.role === "HR") {
+        router.push("/postjob");
+      } else {
+        router.push("/find-jobs");
+      }
     },
   });
 };
@@ -45,7 +49,11 @@ export const useRegister = () => {
     mutationFn: (data: RegisterInput) => authApi.register(data),
     onSuccess: (data) => {
       queryClient.setQueryData(["user"], data.user);
-      router.push("/");
+      if (data.user.role === "HR") {
+        router.push("/postjob");
+      } else {
+        router.push("/find-jobs");
+      }
     },
   });
 };
