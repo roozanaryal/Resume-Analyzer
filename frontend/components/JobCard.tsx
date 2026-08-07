@@ -15,6 +15,7 @@ export interface Job {
   salary: string;
   logo: string;
   status?: string;
+  skillsRequired?: string;
 }
 
 interface JobCardProps {
@@ -107,6 +108,30 @@ const JobCard: React.FC<JobCardProps> = ({
             {job.category}
           </span>
         </div>
+
+        {/* Required Skills Pills */}
+        {job.skillsRequired && (
+          <div className={`flex flex-wrap items-center gap-1.5 ${isListView ? "md:w-1/4" : "mb-4"}`}>
+            {job.skillsRequired
+              .split(/[,;\n]+/)
+              .map((s) => s.trim())
+              .filter(Boolean)
+              .slice(0, 3)
+              .map((skill, idx) => (
+                <span
+                  key={idx}
+                  className="px-2.5 py-0.5 bg-blue-50/80 text-blue-700 rounded-lg text-[10px] font-bold border border-blue-100/50 truncate max-w-[120px]"
+                >
+                  {skill}
+                </span>
+              ))}
+            {job.skillsRequired.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean).length > 3 && (
+              <span className="text-[10px] font-bold text-gray-400">
+                +{job.skillsRequired.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean).length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Date Section */}
         <div

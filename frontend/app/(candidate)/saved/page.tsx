@@ -37,6 +37,7 @@ export default function SavedJobsPage() {
         logo: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
           companyName
         )}&backgroundColor=0284c7`,
+        skillsRequired: j.skillsRequired,
       };
     });
 

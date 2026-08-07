@@ -141,6 +141,41 @@ export const updateProfile = async (req: Request & { user?: any }, res: Response
       },
     });
 
+    // If skills, bio, or experience are updated, sync profile skills into ParsedResume if present
+    if (skills !== undefined || bio !== undefined || experience !== undefined) {
+      try {
+        const { extractSkillsFromProfile, extractSkills } = await import("../services/resumeParserService.js");
+        const existingParsed = await prisma.parsedResume.findUnique({
+          where: { userId: req.user.id },
+        });
+
+        if (existingParsed) {
+          let resumeSkills: string[] = [];
+          if (existingParsed.rawText) {
+            resumeSkills = extractSkills(existingParsed.rawText);
+          } else {
+            try {
+              resumeSkills = JSON.parse(existingParsed.skills || "[]");
+            } catch {
+              resumeSkills = [];
+            }
+          }
+
+          const profileSkills = extractSkillsFromProfile(updatedUser);
+          const combinedSkills = Array.from(new Set([...resumeSkills, ...profileSkills]));
+
+          await prisma.parsedResume.update({
+            where: { userId: req.user.id },
+            data: {
+              skills: JSON.stringify(combinedSkills),
+            },
+          });
+        }
+      } catch (syncErr) {
+        console.error("Error syncing profile skills into ParsedResume:", syncErr);
+      }
+    }
+
     return res.status(200).json({ user: updatedUser, message: "Profile updated successfully" });
   } catch (error) {
     console.error("Error updating profile:", error);

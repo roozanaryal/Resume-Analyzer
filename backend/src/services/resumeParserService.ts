@@ -31,12 +31,15 @@ export const COMPREHENSIVE_SKILL_DICTIONARY: string[] = [
   "Machine Learning", "Deep Learning", "Artificial Intelligence", "AI", "NLP", "Computer Vision",
   "TensorFlow", "PyTorch", "Scikit-learn", "Pandas", "NumPy", "OpenCV", "Agile", "Scrum",
   "Data Analysis", "Data Science", "Data Engineering", "Power BI", "Tableau", "Excel",
+  "Software Testing", "Networking", "Computer Networking", "Network Security",
 
   // Design, UX & Creative
   "UI/UX Design", "UI Design", "UX Design", "Figma", "Adobe XD", "Photoshop", "Illustrator",
   "Wireframing", "Prototyping", "User Research", "Graphic Design", "Canva",
 
-  // Business, Marketing, Sales & Operations
+  // Business, Marketing, Sales, Soft Skills & Operations
+  "Leadership", "Communication", "Team Collaboration", "Teamwork", "Problem Solving", "Critical Thinking",
+  "Time Management", "Adaptability",
   "Project Management", "Product Management", "Digital Marketing", "SEO", "SEM", "Content Writing",
   "Copywriting", "Social Media Marketing", "Email Marketing", "Google Analytics", "Branding",
   "Business Development", "Lead Generation", "Sales Strategy", "CRM", "Salesforce", "HubSpot",
@@ -196,17 +199,92 @@ const PRECOMPILED_SKILL_REGEXES = [...COMPREHENSIVE_SKILL_DICTIONARY]
   });
 
 /**
- * Technical Skill Extraction using pre-compiled dictionary & RegEx boundary rules
+ * Extracts skills directly from the "Skills" section of a resume layout
+ */
+export function extractSkillsFromSection(text: string): string[] {
+  if (!text) return [];
+  const extractedSkills = new Set<string>();
+
+  // 1. Identify Skills section boundaries in raw resume text
+  const skillsHeaderRegex = /(?:^|\n)\s*(?:Skills|Technical Skills|Skills & Tools|Skills and Tools|Technical Proficiency|Core Competencies|Key Skills|Skills & Abilities|Technologies|Tools & Technologies|Areas of Expertise|Professional Skills)\b[:\s]*/i;
+  const matchHeader = skillsHeaderRegex.exec(text);
+
+  if (!matchHeader) {
+    return [];
+  }
+
+  const startIndex = matchHeader.index + matchHeader[0].length;
+  const subText = text.slice(startIndex);
+
+  // 2. Find end of Skills section (next major section header)
+  const nextSectionRegex = /(?:^|\n)\s*(?:Education|Experience|Work Experience|Professional Experience|Projects|Personal Projects|Certifications|Languages|Summary|Professional Summary|Awards|References|Interests|Hobbies)\b/i;
+  const matchNext = nextSectionRegex.exec(subText);
+
+  const skillsSectionText = matchNext ? subText.slice(0, matchNext.index) : subText.slice(0, 2500);
+
+  // 3. Process lines & categories (e.g. "Web Development: HTML, CSS...", "Tools: Git & GitHub")
+  const lines = skillsSectionText.split(/\r?\n/);
+  for (const line of lines) {
+    const trimmedLine = line.replace(/^[•\*\-\–\—\u2022\u25cf\u25cb\s\d\.]+\s*/, "").trim();
+    if (!trimmedLine) continue;
+
+    // Check if line contains a category colon like "Web Development: ..." or "Tools: ..."
+    let itemsText = trimmedLine;
+    if (trimmedLine.includes(":")) {
+      const parts = trimmedLine.split(":");
+      itemsText = parts.slice(1).join(":").trim();
+    }
+
+    if (!itemsText) continue;
+
+    // Split items by commas, ampersands, semicolons, bullets, or slashes
+    const rawTokens = itemsText
+      .split(/[,;&|\/•\*\-\n\u2022\u25cf\u25cb]+/)
+      .map((item) => item.replace(/^[•\*\-\s\u2022\u25cf\u25cb]+|[•\*\-\s\u2022\u25cf\u25cb]+$/g, "").trim())
+      .filter((item) => item.length > 1 && item.length < 50);
+
+    for (const token of rawTokens) {
+      // Clean up common qualification words like "REACT BASIC" -> "React"
+      const cleanToken = token
+        .replace(/^(proficient in|working knowledge of|basic|advanced|intermediate|strong|good)\s+/i, "")
+        .replace(/\s+(basic|advanced|intermediate|fundamentals|level)$/i, "")
+        .trim();
+
+      const candidate = cleanToken || token;
+      if (candidate.length > 1 && !/^(and|or|with|using|skills|tools|web development|soft skills)$/i.test(candidate)) {
+        const canonicalMatch = PRECOMPILED_SKILL_REGEXES.find((item) => item.regex.test(candidate));
+        if (canonicalMatch) {
+          extractedSkills.add(canonicalMatch.skill);
+        } else {
+          const formatted = candidate.charAt(0).toUpperCase() + candidate.slice(1);
+          extractedSkills.add(formatted);
+        }
+      }
+    }
+  }
+
+  return Array.from(extractedSkills);
+}
+
+/**
+ * Technical & General Skill Extraction using pre-compiled dictionary & section-based layout parsing
  */
 export function extractSkills(text: string): string[] {
   if (!text) return [];
   const foundSkills = new Set<string>();
 
+  // 1. Pre-compiled dictionary matching across entire text
   for (let i = 0; i < PRECOMPILED_SKILL_REGEXES.length; i++) {
     const item = PRECOMPILED_SKILL_REGEXES[i]!;
     if (item.regex.test(text)) {
       foundSkills.add(item.skill);
     }
+  }
+
+  // 2. Dynamic section-based extraction from Skills section layout
+  const sectionSkills = extractSkillsFromSection(text);
+  for (const s of sectionSkills) {
+    foundSkills.add(s);
   }
 
   return Array.from(foundSkills);
@@ -322,7 +400,44 @@ export function parseResumeText(rawText: string): ParsedResumeData {
 }
 
 /**
- * Helper to read PDF file, parse content, and upsert ParsedResume model in DB
+ * Extract skills from user profile (skills section, bio, experience)
+ */
+export function extractSkillsFromProfile(profile: { skills?: string | null; bio?: string | null; experience?: string | null }): string[] {
+  const profileSkillsSet = new Set<string>();
+
+  if (profile.skills) {
+    // 1. Explicitly split skills field (comma, semicolon, or newline separated)
+    const rawSkills = profile.skills.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+    for (const skill of rawSkills) {
+      profileSkillsSet.add(skill);
+    }
+
+    // 2. Extract matching dictionary skills from profile skills text
+    const extractedFromText = extractSkills(profile.skills);
+    for (const skill of extractedFromText) {
+      profileSkillsSet.add(skill);
+    }
+  }
+
+  if (profile.bio) {
+    const bioSkills = extractSkills(profile.bio);
+    for (const skill of bioSkills) {
+      profileSkillsSet.add(skill);
+    }
+  }
+
+  if (profile.experience) {
+    const expSkills = extractSkills(profile.experience);
+    for (const skill of expSkills) {
+      profileSkillsSet.add(skill);
+    }
+  }
+
+  return Array.from(profileSkillsSet);
+}
+
+/**
+ * Helper to read PDF file, parse content, merge with profile skills, and upsert ParsedResume model in DB
  */
 export async function parseAndSaveUserResume(userId: string, filePath: string) {
   try {
@@ -334,12 +449,24 @@ export async function parseAndSaveUserResume(userId: string, filePath: string) {
     const rawText = await extractTextFromPDF(fileBuffer);
     const parsed = parseResumeText(rawText);
 
+    // Fetch candidate profile to also extract skills from profile's skills section, bio & experience
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { skills: true, bio: true, experience: true },
+    });
+
+    let combinedSkills = [...parsed.skills];
+    if (user) {
+      const profileSkills = extractSkillsFromProfile(user);
+      combinedSkills = Array.from(new Set([...combinedSkills, ...profileSkills]));
+    }
+
     const parsedResume = await prisma.parsedResume.upsert({
       where: { userId },
       create: {
         userId,
         email: parsed.email,
-        skills: JSON.stringify(parsed.skills),
+        skills: JSON.stringify(combinedSkills),
         experienceYears: parsed.experienceYears,
         education: JSON.stringify(parsed.education),
         certifications: JSON.stringify(parsed.certifications),
@@ -347,7 +474,7 @@ export async function parseAndSaveUserResume(userId: string, filePath: string) {
       },
       update: {
         email: parsed.email,
-        skills: JSON.stringify(parsed.skills),
+        skills: JSON.stringify(combinedSkills),
         experienceYears: parsed.experienceYears,
         education: JSON.stringify(parsed.education),
         certifications: JSON.stringify(parsed.certifications),

@@ -246,7 +246,7 @@ export default function JobDetailsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-10 pt-8 border-t border-gray-50">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-8 border-t border-gray-50">
               <div className="bg-gray-50 p-4 rounded-2xl">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                   Salary Range
@@ -263,7 +263,15 @@ export default function JobDetailsPage() {
                   {job.employer?.companySize || "11-50 employees"}
                 </p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-2xl col-span-2 md:col-span-1">
+              <div className="bg-gray-50 p-4 rounded-2xl">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                  Experience
+                </p>
+                <p className="text-lg font-black text-gray-900">
+                  {job.experienceRequired || "Any Experience"}
+                </p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-2xl">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
                   Work Type
                 </p>
@@ -284,6 +292,35 @@ export default function JobDetailsPage() {
               <p className="text-gray-600 leading-relaxed text-lg font-medium whitespace-pre-line">
                 {job.description}
               </p>
+            </div>
+
+            {/* Required Skills Section */}
+            <div className="pt-8 border-t border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <div className="h-8 w-1 bg-blue-600 rounded-full" />
+                Required Skills & Qualifications
+              </h2>
+              {job.skillsRequired ? (
+                <div className="flex flex-wrap gap-2.5">
+                  {job.skillsRequired
+                    .split(/[,;\n]+/)
+                    .map((s: string) => s.trim())
+                    .filter(Boolean)
+                    .map((skill: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="px-4 py-2.5 bg-blue-50/80 text-blue-700 font-bold text-sm rounded-xl border border-blue-100 shadow-xs flex items-center gap-2"
+                      >
+                        <span className="h-2 w-2 rounded-full bg-blue-600" />
+                        {skill}
+                      </span>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm font-semibold text-gray-400 italic">
+                  No explicit skills listed. Please refer to the job description above.
+                </p>
+              )}
             </div>
           </div>
         </div>

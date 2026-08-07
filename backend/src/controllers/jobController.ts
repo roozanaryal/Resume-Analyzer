@@ -4,7 +4,7 @@ import { prisma } from "../config/db.js";
 import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
-import { parseAndSaveUserResume, extractSkills, extractExperienceYears } from "../services/resumeParserService.js";
+import { parseAndSaveUserResume, extractSkills, extractExperienceYears, extractSkillsFromProfile } from "../services/resumeParserService.js";
 import { rankCandidates, type CandidateProfileForRanking } from "../services/rankingService.js";
 
 // Helper interface for authenticated requests
@@ -820,24 +820,11 @@ export const getJobApplicants = async (req: AuthRequest, res: Response) => {
           }
         }
 
-        // Combine skills from PDF resume with user profile skills, bio, and experience fields
-        let profileSkills: string[] = [];
-        if (app.user.skills) {
-          profileSkills = app.user.skills.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
-        }
-        if (app.user.bio) {
-          const bioSkills = extractSkills(app.user.bio);
-          profileSkills = [...profileSkills, ...bioSkills];
-          if (experienceYears === 0) {
-            experienceYears = extractExperienceYears(app.user.bio);
-          }
-        }
-        if (app.user.experience) {
-          const expSkills = extractSkills(app.user.experience);
-          profileSkills = [...profileSkills, ...expSkills];
-          if (experienceYears === 0) {
-            experienceYears = extractExperienceYears(app.user.experience);
-          }
+        // Combine skills from PDF resume with user profile skills (skills section, bio, and experience)
+        const profileSkills = extractSkillsFromProfile(app.user);
+        if (experienceYears === 0) {
+          if (app.user.bio) experienceYears = extractExperienceYears(app.user.bio);
+          if (experienceYears === 0 && app.user.experience) experienceYears = extractExperienceYears(app.user.experience);
         }
 
         const aggregatedSkills = Array.from(new Set([...skills, ...profileSkills]));
