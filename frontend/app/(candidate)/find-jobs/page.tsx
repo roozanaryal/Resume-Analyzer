@@ -44,6 +44,7 @@ export default function FindJobsPage() {
     search: debouncedSearchQuery || undefined,
     location: debouncedLocation || undefined,
     type: activeTypeFilter,
+    limit: 1000,
   });
 
   const { data: savedJobsData } = useSavedJobs();

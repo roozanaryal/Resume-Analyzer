@@ -26,7 +26,7 @@ interface AuthRequest extends Request {
 export const getJobs = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 9; // Defaulting to 9 as mentioned by user
+    const limit = parseInt(req.query.limit as string) || 8; // Defaulting to 8 as requested by user
     const skip = (page - 1) * limit;
 
     const { search, location, type, minSalary, maxSalary } = req.query;
@@ -329,7 +329,7 @@ export const getSavedJobs = async (
     }
 
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 9;
+    const limit = parseInt(req.query.limit as string) || 8;
     const skip = (page - 1) * limit;
 
     const [savedJobs, total] = await Promise.all([
