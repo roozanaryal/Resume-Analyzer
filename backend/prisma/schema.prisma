@@ -61,6 +61,9 @@ model Job {
   applications Application[]
 
   createdAt DateTime @default(now())
+
+  @@index([employerId])
+  @@index([createdAt])
 }
 
 enum ApplicationStatus {
@@ -83,6 +86,10 @@ model Application {
   createdAt DateTime @default(now())
 
   @@unique([userId, jobId])
+  @@index([jobId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model SavedJob {
@@ -132,6 +139,9 @@ model Message {
   chatRoom  ChatRoom @relation(fields: [chatRoomId], references: [id])
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([chatRoomId])
+  @@index([createdAt])
 }
 
 model CallLog {

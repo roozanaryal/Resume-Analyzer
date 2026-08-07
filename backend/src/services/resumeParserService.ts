@@ -184,24 +184,28 @@ export function extractEmail(text: string): string | null {
   return match ? match[0].toLowerCase() : null;
 }
 
+// Pre-compiled skill regex array sorted by length descending (allocated ONCE at module load)
+const PRECOMPILED_SKILL_REGEXES = [...COMPREHENSIVE_SKILL_DICTIONARY]
+  .sort((a, b) => b.length - a.length)
+  .map((skill) => {
+    const escapedSkill = skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    return {
+      skill,
+      regex: new RegExp(`(?:^|[^a-zA-Z0-9_#+])${escapedSkill}(?:$|[^a-zA-Z0-9_#+])`, "i"),
+    };
+  });
+
 /**
- * Technical Skill Extraction using predefined dictionary & RegEx boundary rules
+ * Technical Skill Extraction using pre-compiled dictionary & RegEx boundary rules
  */
 export function extractSkills(text: string): string[] {
+  if (!text) return [];
   const foundSkills = new Set<string>();
 
-  // Sort dictionary by skill length descending to prioritize exact longer matches (e.g., "React Native" before "React")
-  const sortedDictionary = [...COMPREHENSIVE_SKILL_DICTIONARY].sort((a, b) => b.length - a.length);
-
-  for (const skill of sortedDictionary) {
-    // Escape special regex characters in skill names (e.g. C++, C#, .NET, Node.js)
-    const escapedSkill = skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-    
-    // Boundary rule: match skill bounded by non-alphanumeric or start/end string
-    const regex = new RegExp(`(?:^|[^a-zA-Z0-9_#+])${escapedSkill}(?:$|[^a-zA-Z0-9_#+])`, "i");
-
-    if (regex.test(text)) {
-      foundSkills.add(skill);
+  for (let i = 0; i < PRECOMPILED_SKILL_REGEXES.length; i++) {
+    const item = PRECOMPILED_SKILL_REGEXES[i]!;
+    if (item.regex.test(text)) {
+      foundSkills.add(item.skill);
     }
   }
 
