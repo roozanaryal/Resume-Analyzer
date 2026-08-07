@@ -5,6 +5,7 @@ import { Search, MapPin, ChevronDown, LayoutGrid, List, Loader2 } from "lucide-r
 import JobCard, { Job } from "@/components/JobCard";
 import SalaryRangeSlider from "@/components/SalaryRangeSlider";
 import { useJobs, useSavedJobs, useToggleSaveJob } from "@/features/jobs/hooks";
+import { useDebounce } from "@/hooks/use-debounce";
 
 export default function FindJobsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -31,10 +32,13 @@ export default function FindJobsPage() {
   const selectedTypes = Object.keys(jobTypeFilters).filter((key) => jobTypeFilters[key]);
   const activeTypeFilter = selectedTypes.length === 1 ? selectedTypes[0] : undefined;
 
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedLocation = useDebounce(location, 500);
+
   // Fetch jobs and saved jobs from backend
   const { data: jobsData, isLoading: isJobsLoading, isError } = useJobs({
-    search: searchQuery || undefined,
-    location: location || undefined,
+    search: debouncedSearchQuery || undefined,
+    location: debouncedLocation || undefined,
     type: activeTypeFilter,
   });
 
@@ -74,13 +78,13 @@ export default function FindJobsPage() {
   // Client-side additional filtering (for multi-type or salary range client refinement)
   const filteredJobs = mappedJobs.filter((job) => {
     const matchesTitle =
-      !searchQuery ||
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.category.toLowerCase().includes(searchQuery.toLowerCase());
+      !debouncedSearchQuery ||
+      job.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      job.company.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      job.category.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
 
     const matchesLocation =
-      !location || job.location.toLowerCase().includes(location.toLowerCase());
+      !debouncedLocation || job.location.toLowerCase().includes(debouncedLocation.toLowerCase());
 
     const hasSelectedTypes = Object.values(jobTypeFilters).some((v) => v);
     const matchesType =

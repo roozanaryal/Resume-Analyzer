@@ -67,7 +67,38 @@ export const useToggleSaveJob = () => {
         return jobsApi.saveJob(jobId);
       }
     },
-    onSuccess: () => {
+    onMutate: async ({ jobId, isSaved }) => {
+      await queryClient.cancelQueries({ queryKey: ["saved-jobs"] });
+      const previousSavedJobs = queryClient.getQueryData(["saved-jobs"]);
+
+      queryClient.setQueryData(["saved-jobs"], (old: any) => {
+        if (!old) return { savedJobs: [] };
+        if (isSaved) {
+          return {
+            ...old,
+            savedJobs: (old.savedJobs || []).filter(
+              (sj: any) => String(sj.jobId || sj.job?.id) !== String(jobId)
+            ),
+          };
+        } else {
+          return {
+            ...old,
+            savedJobs: [
+              ...(old.savedJobs || []),
+              { jobId: String(jobId), job: { id: String(jobId) } },
+            ],
+          };
+        }
+      });
+
+      return { previousSavedJobs };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousSavedJobs) {
+        queryClient.setQueryData(["saved-jobs"], context.previousSavedJobs);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["saved-jobs"] });
     },
   });
