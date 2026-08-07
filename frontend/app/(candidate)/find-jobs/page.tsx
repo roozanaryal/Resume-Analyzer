@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, MapPin, ChevronDown, LayoutGrid, List, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MapPin, ChevronDown, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import JobCard, { Job } from "@/components/JobCard";
 import SalaryRangeSlider from "@/components/SalaryRangeSlider";
 import { useJobs, useSavedJobs, useToggleSaveJob } from "@/features/jobs/hooks";
@@ -10,7 +10,6 @@ import { useDebounce } from "@/hooks/use-debounce";
 const ITEMS_PER_PAGE = 8;
 
 export default function FindJobsPage() {
-  const [view, setView] = useState<"grid" | "list">("grid");
   const [appliedJobs, setAppliedJobs] = useState<(string | number)[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -302,23 +301,6 @@ export default function FindJobsPage() {
 
         {/* Main Content */}
         <main className="lg:col-span-9">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end mb-6 sm:mb-8 gap-4">
-            <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
-              <button
-                onClick={() => setView("grid")}
-                className={`p-2 rounded-lg transition-all cursor-pointer ${view === "grid" ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
-              >
-                <LayoutGrid className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => setView("list")}
-                className={`p-2 rounded-lg transition-all cursor-pointer ${view === "list" ? "bg-blue-600 text-white shadow-md" : "text-gray-400 hover:text-gray-600"}`}
-              >
-                <List className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
           {/* Loading state */}
           {isJobsLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-500 font-medium">
@@ -329,7 +311,7 @@ export default function FindJobsPage() {
             <>
               {/* Job Grid */}
               <div
-                className={`grid gap-5 sm:gap-6 ${view === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
+                className="grid gap-5 sm:gap-6 grid-cols-1 md:grid-cols-2"
               >
                 {paginatedJobs.length > 0 ? (
                   paginatedJobs.map((job) => (
@@ -342,7 +324,7 @@ export default function FindJobsPage() {
                       isApplied={
                         appliedJobs.includes(job.id) || job.status === "Applied"
                       }
-                      view={view}
+                      view="grid"
                     />
                   ))
                 ) : (
