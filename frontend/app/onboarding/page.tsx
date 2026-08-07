@@ -65,17 +65,7 @@ export default function OnboardingPage() {
     }
   }, [user]);
 
-  // Check if onboarding is already completed, redirect if so
-  useEffect(() => {
-    if (!isUserLoading && user) {
-      const isCandidateCompleted = user.role === "CANDIDATE" && user.skills && user.preferredIndustry;
-      const isHRCompleted = user.role === "HR" && user.companyName && user.companyIndustry;
-      if (isCandidateCompleted || isHRCompleted) {
-        // If already completed, direct to main areas
-        router.push(user.role === "HR" ? "/postjob" : "/find-jobs");
-      }
-    }
-  }, [user, isUserLoading, router]);
+
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -397,7 +387,7 @@ export default function OnboardingPage() {
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf"
                     className="hidden"
                   />
                   <div className="h-10 w-10 rounded-xl bg-gray-50 group-hover:bg-blue-50 text-gray-400 group-hover:text-blue-600 flex items-center justify-center transition-colors">
@@ -418,7 +408,7 @@ export default function OnboardingPage() {
                   ) : (
                     <div>
                       <p className="text-xs font-bold text-gray-700">Click to upload your resume</p>
-                      <p className="text-[10px] text-gray-400 mt-0.5">PDF, DOC, or DOCX (Max 5MB)</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">PDF only (Max 5MB)</p>
                     </div>
                   )}
                 </div>

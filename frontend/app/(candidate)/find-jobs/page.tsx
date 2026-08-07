@@ -46,8 +46,8 @@ export default function FindJobsPage() {
   const toggleSaveMutation = useToggleSaveJob();
 
   // Extract saved job IDs from backend response
-  const savedJobIds: (string | number)[] = (savedJobsData?.savedJobs || []).map(
-    (sj: any) => sj.jobId || sj.job?.id
+  const savedJobIds: string[] = (savedJobsData?.savedJobs || []).map(
+    (sj: any) => String(sj.jobId || sj.job?.id)
   );
 
   // Map backend jobs to component format
@@ -118,7 +118,7 @@ export default function FindJobsPage() {
   });
 
   const toggleSaveJob = (id: string | number) => {
-    const isSaved = savedJobIds.includes(id);
+    const isSaved = savedJobIds.includes(String(id));
     toggleSaveMutation.mutate({ jobId: String(id), isSaved });
   };
 
@@ -326,7 +326,7 @@ export default function FindJobsPage() {
                   <JobCard
                     key={job.id}
                     job={job}
-                    isSaved={savedJobIds.includes(job.id)}
+                    isSaved={savedJobIds.includes(String(job.id))}
                     onSaveToggle={toggleSaveJob}
                     onApply={toggleApplyJob}
                     isApplied={

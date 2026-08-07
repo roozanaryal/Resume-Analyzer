@@ -49,11 +49,7 @@ export const useRegister = () => {
     mutationFn: (data: RegisterInput) => authApi.register(data),
     onSuccess: (data) => {
       queryClient.setQueryData(["user"], data.user);
-      if (data.user.role === "HR") {
-        router.push("/postjob");
-      } else {
-        router.push("/find-jobs");
-      }
+      router.push("/onboarding");
     },
   });
 };

@@ -42,6 +42,7 @@ model User {
   chatRoomParticipant ChatRoomParticipant[]
   sentMessages        Message[]             @relation("SentMessages")
   recivedMessages     Message[]             @relation("ReceivedMessages")
+  parsedResume        ParsedResume?
 }
 
 model Job {
@@ -64,7 +65,7 @@ model Job {
 
 enum ApplicationStatus {
   PENDING
-  REVIEWED
+  SHORTLISTED
   ACCEPTED
   REJECTED
 }
@@ -142,3 +143,18 @@ model CallLog {
   status     String // MISSED, COMPLETED, ONGOING
   chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id])
 }
+
+model ParsedResume {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email           String?
+  skills          String   // Stored as JSON array string
+  experienceYears Float    @default(0)
+  education       String?  // JSON string or text summary
+  certifications  String?  // JSON string or text summary
+  rawText         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+

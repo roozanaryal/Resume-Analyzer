@@ -200,6 +200,14 @@ export const uploadResumeToProfile = async (req: Request & { user?: any }, res: 
       },
     });
 
+    // Parse uploaded resume PDF and store in ParsedResume DB model asynchronously
+    try {
+      const { parseAndSaveUserResume } = await import("../services/resumeParserService.js");
+      await parseAndSaveUserResume(req.user.id, req.file.path);
+    } catch (parseErr) {
+      console.error("Resume parsing error during profile upload:", parseErr);
+    }
+
     return res.status(200).json({
       message: "Resume uploaded successfully",
       user: updatedUser,

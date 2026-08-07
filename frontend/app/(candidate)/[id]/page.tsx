@@ -56,7 +56,7 @@ export default function JobDetailsPage() {
   const savedJobIds: string[] = (savedJobsData?.savedJobs || []).map(
     (sj: any) => sj.jobId || sj.job?.id
   );
-  const isSaved = savedJobIds.includes(id);
+  const isSaved = savedJobIds.includes(String(id));
   const hasApplied = appStatusData?.hasApplied || false;
   const hasProfileResume = !!user?.resumeURL;
 
@@ -348,7 +348,7 @@ export default function JobDetailsPage() {
                           <Upload className="h-6 w-6 text-white" />
                         </div>
                         <p className="text-sm font-bold text-white mb-1">Click to upload</p>
-                        <p className="text-xs text-blue-200 font-medium">PDF, DOC, DOCX (Max. 5MB)</p>
+                        <p className="text-xs text-blue-200 font-medium">PDF only (Max. 5MB)</p>
                       </div>
                     ) : (
                       <div className="w-full bg-white/10 rounded-2xl p-4 flex items-center justify-between border border-white/20">
@@ -378,7 +378,7 @@ export default function JobDetailsPage() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
-                  accept=".pdf,.doc,.docx"
+                  accept=".pdf"
                   className="hidden"
                 />
               </div>

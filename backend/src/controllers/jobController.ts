@@ -3,6 +3,9 @@ import { validationResult } from "express-validator";
 import { prisma } from "../config/db.js";
 import fs from "fs";
 import path from "path";
+import jwt from "jsonwebtoken";
+import { parseAndSaveUserResume, extractSkills, extractExperienceYears } from "../services/resumeParserService.js";
+import { rankCandidates, type CandidateProfileForRanking } from "../services/rankingService.js";
 
 // Helper interface for authenticated requests
 interface AuthRequest extends Request {
@@ -60,7 +63,6 @@ export const getJobs = async (req: Request, res: Response, next: NextFunction) =
     const token = req.cookies?.token || req.headers?.authorization?.split(" ")[1];
     if (token) {
       try {
-        const jwt = require("jsonwebtoken");
         const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_secret") as { userId: string };
         const user = await prisma.user.findUnique({
           where: { id: decoded.userId },
@@ -578,13 +580,32 @@ export const applyToJob = async (req: AuthRequest, res: Response) => {
         where: { id: userId },
         data: { resumeURL },
       });
+
+      // Parse uploaded PDF resume and save to ParsedResume DB table
+      try {
+        await parseAndSaveUserResume(userId, req.file.path);
+      } catch (parseErr) {
+        console.error("Failed to parse resume on job application:", parseErr);
+      }
     } else {
       // Fallback to user's saved resume URL if available
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { resumeURL: true },
+        select: { resumeURL: true, parsedResume: true },
       });
       resumeURL = user?.resumeURL || null;
+
+      // If user has a resumeURL but no parsed resume yet, attempt parsing
+      if (resumeURL && !user?.parsedResume) {
+        const fullFilePath = path.join(process.cwd(), resumeURL);
+        if (fs.existsSync(fullFilePath)) {
+          try {
+            await parseAndSaveUserResume(userId, fullFilePath);
+          } catch (parseErr) {
+            console.error("Failed to parse existing user resume file:", parseErr);
+          }
+        }
+      }
     }
 
     const application = await prisma.application.create({
@@ -651,63 +672,37 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
-    // 1. Total jobs posted by this employer
-    const totalJobsPosted = await prisma.job.count({
-      where: { employerId: userId },
-    });
-
-    // 2. Total active applications for this employer's jobs
-    const totalApplications = await prisma.application.count({
-      where: { job: { employerId: userId } },
-    });
-
-    // 3. Pending applications count
-    const pendingReviews = await prisma.application.count({
-      where: {
-        job: { employerId: userId },
-        status: "PENDING",
-      },
-    });
-
-    // 4. Accepted count
-    const acceptedCount = await prisma.application.count({
-      where: {
-        job: { employerId: userId },
-        status: "ACCEPTED",
-      },
-    });
-
-    // 5. Recent Applications
-    const recentApplications = await prisma.application.findMany({
-      where: { job: { employerId: userId } },
-      take: 6,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
+    // Run all database metric queries concurrently via Promise.all
+    const [
+      totalJobsPosted,
+      totalApplications,
+      pendingReviews,
+      acceptedCount,
+      recentApplications,
+      jobsWithApps
+    ] = await Promise.all([
+      prisma.job.count({ where: { employerId: userId } }),
+      prisma.application.count({ where: { job: { employerId: userId } } }),
+      prisma.application.count({ where: { job: { employerId: userId }, status: "PENDING" } }),
+      prisma.application.count({ where: { job: { employerId: userId }, status: "ACCEPTED" } }),
+      prisma.application.findMany({
+        where: { job: { employerId: userId } },
+        take: 6,
+        orderBy: { createdAt: "desc" },
+        include: {
+          user: { select: { name: true, email: true } },
+          job: { select: { title: true } },
         },
-        job: {
-          select: {
-            title: true,
-          },
+      }),
+      prisma.job.findMany({
+        where: { employerId: userId },
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          _count: { select: { applications: true } },
         },
-      },
-    });
-
-    // 6. Top Jobs with application counts
-    const jobsWithApps = await prisma.job.findMany({
-      where: { employerId: userId },
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: { applications: true },
-        },
-      },
-    });
+      }),
+    ]);
 
     return res.status(200).json({
       totalJobsPosted,
@@ -746,7 +741,14 @@ export const getJobApplicants = async (req: AuthRequest, res: Response) => {
 
     const job = await prisma.job.findUnique({
       where: { id: jobId },
-      select: { employerId: true, title: true },
+      select: {
+        id: true,
+        employerId: true,
+        title: true,
+        description: true,
+        skillsRequired: true,
+        experienceRequired: true,
+      },
     });
 
     if (!job) {
@@ -767,24 +769,101 @@ export const getJobApplicants = async (req: AuthRequest, res: Response) => {
             name: true,
             email: true,
             bio: true,
+            skills: true,
+            experience: true,
+            education: true,
             resumeURL: true,
+            parsedResume: true,
           },
         },
       },
     });
 
+    // Build candidate profiles for ranking algorithm efficiently
+    const candidateProfiles: CandidateProfileForRanking[] = applications.map((app) => {
+      let parsedResume = app.user.parsedResume;
+
+      // Trigger background non-blocking parsing if resume exists but unparsed
+      const effectiveResumeURL = app.resumeURL || app.user.resumeURL;
+      if (!parsedResume && effectiveResumeURL) {
+        const filePath = path.join(process.cwd(), effectiveResumeURL);
+        if (fs.existsSync(filePath)) {
+          parseAndSaveUserResume(app.userId, filePath).catch((err) =>
+            console.error("Background parsing error:", err)
+          );
+        }
+      }
+
+        let skills: string[] = [];
+        let experienceYears = 0;
+        let education: string[] = [];
+        let certifications: string[] = [];
+        let email = app.user.email;
+
+        if (parsedResume) {
+          email = parsedResume.email || app.user.email;
+          try {
+            skills = JSON.parse(parsedResume.skills || "[]");
+          } catch {
+            skills = [];
+          }
+          experienceYears = parsedResume.experienceYears || 0;
+          try {
+            education = JSON.parse(parsedResume.education || "[]");
+          } catch {
+            education = [];
+          }
+          try {
+            certifications = JSON.parse(parsedResume.certifications || "[]");
+          } catch {
+            certifications = [];
+          }
+        }
+
+        // Combine skills from PDF resume with user profile skills, bio, and experience fields
+        let profileSkills: string[] = [];
+        if (app.user.skills) {
+          profileSkills = app.user.skills.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+        }
+        if (app.user.bio) {
+          const bioSkills = extractSkills(app.user.bio);
+          profileSkills = [...profileSkills, ...bioSkills];
+          if (experienceYears === 0) {
+            experienceYears = extractExperienceYears(app.user.bio);
+          }
+        }
+        if (app.user.experience) {
+          const expSkills = extractSkills(app.user.experience);
+          profileSkills = [...profileSkills, ...expSkills];
+          if (experienceYears === 0) {
+            experienceYears = extractExperienceYears(app.user.experience);
+          }
+        }
+
+        const aggregatedSkills = Array.from(new Set([...skills, ...profileSkills]));
+
+        return {
+          id: app.id,
+          userId: app.userId,
+          name: app.user.name,
+          email,
+          bio: app.user.bio,
+          skills: aggregatedSkills,
+          experienceYears,
+          education,
+          certifications,
+          resumeURL: effectiveResumeURL,
+          status: app.status,
+          createdAt: app.createdAt,
+        };
+      });
+
+    // Apply Weighted Ranking Algorithm (70% Cosine Similarity + 30% Experience Score)
+    const rankedCandidates = rankCandidates(job, candidateProfiles);
+
     return res.status(200).json({
       jobTitle: job.title,
-      applications: applications.map((app) => ({
-        id: app.id,
-        userId: app.userId,
-        name: app.user.name,
-        email: app.user.email,
-        bio: app.user.bio,
-        resumeURL: app.resumeURL || app.user.resumeURL,
-        status: app.status,
-        createdAt: app.createdAt,
-      })),
+      applications: rankedCandidates,
     });
   } catch (error: any) {
     console.error("Error in getJobApplicants:", error);

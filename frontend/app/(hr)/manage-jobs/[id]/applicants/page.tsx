@@ -37,6 +37,10 @@ export default function ApplicantsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedApplicant, setSelectedApplicant] = useState<any | null>(null);
+  const [optimisticStatuses, setOptimisticStatuses] = useState<Record<string, string>>({});
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  const [fitModalApplicant, setFitModalApplicant] = useState<any | null>(null);
 
   const handleStartChat = (userId: string) => {
     if (!userId) return;
@@ -61,8 +65,8 @@ export default function ApplicantsPage() {
         })
       : "Recently";
 
-    // Generate deterministic mock fit score (e.g. 78%, 85%, 92%, etc.)
-    const fitScore = 80 + ((idx * 4) % 17) - ((idx * 3) % 5);
+    // Calculate real fit score from backend weighted ranking algorithm
+    const fitScore = app.finalScore !== undefined ? app.finalScore : 80;
 
     return {
       id: app.id,
@@ -73,9 +77,17 @@ export default function ApplicantsPage() {
       email: app.email,
       bio: app.bio || "No bio provided.",
       appliedDate: formattedDate,
-      status: app.status || "PENDING",
+      status: optimisticStatuses[app.id] || app.status || "PENDING",
       resumeURL: app.resumeURL,
       fitScore,
+      skillMatchPercentage: app.skillMatchPercentage || 0,
+      experienceScore: app.experienceScore || 0,
+      experienceYears: app.experienceYears || 0,
+      matchedSkills: app.matchedSkills || [],
+      missingSkills: app.missingSkills || [],
+      skills: app.skills || [],
+      education: app.education || [],
+      certifications: app.certifications || [],
       avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
         app.name || "Candidate"
       )}&backgroundColor=0284c7`,
@@ -88,8 +100,8 @@ export default function ApplicantsPage() {
       app.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
       statusFilter === "All" ||
-      (statusFilter === "Under Review" && app.status === "PENDING") ||
-      (statusFilter === "Reviewed" && app.status === "REVIEWED") ||
+      (statusFilter === "Pending" && app.status === "PENDING") ||
+      (statusFilter === "Shortlisted" && app.status === "SHORTLISTED") ||
       (statusFilter === "Accepted" && app.status === "ACCEPTED") ||
       (statusFilter === "Rejected" && app.status === "REJECTED");
     return matchesSearch && matchesStatus;
@@ -101,12 +113,26 @@ export default function ApplicantsPage() {
   const stats = {
     total: applicants.length,
     pending: applicants.filter((a: any) => a.status === "PENDING").length,
+    shortlisted: applicants.filter((a: any) => a.status === "SHORTLISTED").length,
     accepted: applicants.filter((a: any) => a.status === "ACCEPTED").length,
     rejected: applicants.filter((a: any) => a.status === "REJECTED").length,
   };
 
   const handleStatusChange = (applicationId: string, newStatus: string) => {
-    updateStatusMutation.mutate({ applicationId, status: newStatus });
+    setOptimisticStatuses((prev) => ({ ...prev, [applicationId]: newStatus }));
+    setOpenDropdownId(null);
+    updateStatusMutation.mutate(
+      { applicationId, status: newStatus },
+      {
+        onError: () => {
+          setOptimisticStatuses((prev) => {
+            const next = { ...prev };
+            delete next[applicationId];
+            return next;
+          });
+        },
+      }
+    );
   };
 
   const openResume = (resumeURL?: string | null) => {
@@ -126,8 +152,8 @@ export default function ApplicantsPage() {
         return "bg-emerald-50 text-emerald-700 ring-emerald-200";
       case "REJECTED":
         return "bg-red-50 text-red-700 ring-red-200";
-      case "REVIEWED":
-        return "bg-amber-50 text-amber-700 ring-amber-200";
+      case "SHORTLISTED":
+        return "bg-purple-50 text-purple-700 ring-purple-200";
       default:
         return "bg-blue-50 text-blue-700 ring-blue-200";
     }
@@ -184,6 +210,7 @@ export default function ApplicantsPage() {
           {[
             { label: "Total Applicants", value: stats.total, icon: Users, color: "text-blue-600", bg: "bg-blue-50/80" },
             { label: "Pending", value: stats.pending, icon: Clock, color: "text-amber-600", bg: "bg-amber-50/80" },
+            { label: "Shortlisted", value: stats.shortlisted, icon: Briefcase, color: "text-purple-600", bg: "bg-purple-50/80" },
             { label: "Accepted", value: stats.accepted, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50/80" },
             { label: "Rejected", value: stats.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50/80" },
           ].map((stat, i) => (
@@ -215,7 +242,7 @@ export default function ApplicantsPage() {
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto" style={{ scrollbarWidth: "none" }}>
-              {["All", "Under Review", "Reviewed", "Accepted", "Rejected"].map((status) => (
+              {["All", "Pending", "Shortlisted", "Accepted", "Rejected"].map((status) => (
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status)}
@@ -233,7 +260,7 @@ export default function ApplicantsPage() {
 
           <div className="px-6 py-4 bg-linear-to-r from-blue-50/50 to-violet-50/50 border-b border-gray-100/50">
             <p className="text-sm font-semibold text-gray-700">
-              Showing <span className="text-gray-900 font-bold">{filteredApplicants.length}</span> of <span className="text-gray-900 font-bold">{applicants.length}</span> applicants
+              Showing <span className="text-gray-900 font-bold">{filteredApplicants.length}</span> of <span className="text-gray-900 font-bold">{applicants.length}</span> applicants (ranked by Final Fit Score)
             </p>
           </div>
 
@@ -255,11 +282,16 @@ export default function ApplicantsPage() {
                       </div>
                     </div>
                     
-                    {/* Job Fit percentage badge */}
-                    <div className="px-3 py-1.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center gap-1 text-blue-600 shrink-0">
-                      <Sparkles className="h-3.5 w-3.5 fill-blue-100 text-blue-500 animate-pulse" />
+                    {/* Clickable Job Fit percentage badge */}
+                    <button
+                      type="button"
+                      onClick={() => setFitModalApplicant(app)}
+                      className="px-3 py-1.5 bg-blue-50/80 hover:bg-blue-100 border border-blue-200 rounded-xl flex items-center gap-1.5 text-blue-600 shrink-0 cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-2xs group/badge"
+                      title="Click to view Fitting Algorithm Breakdown"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 fill-blue-100 text-blue-500 animate-pulse group-hover/badge:rotate-12 transition-transform" />
                       <span className="text-xs font-black">{app.fitScore}% Fit</span>
-                    </div>
+                    </button>
                   </div>
 
                   <div className="space-y-3 mb-6 flex-1 bg-gray-50/50 rounded-xl p-4 border border-gray-100/50">
@@ -274,20 +306,57 @@ export default function ApplicantsPage() {
                   </div>
 
                   <div className="flex items-center justify-between pt-5 border-t border-gray-100/50 mb-6 mt-auto">
-                    <div className="relative z-20 w-full">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Status</p>
-                      <div className="relative group/select">
-                        <select
-                          value={app.status}
-                          onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                          className={`w-full appearance-none outline-none pr-8 pl-3 py-2 rounded-xl text-xs font-bold ring-1 transition-all cursor-pointer hover:ring-2 ${getStatusColor(app.status)}`}
+                    <div className="relative z-30 w-full">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Application Status</p>
+                      <div className="relative">
+                        {/* Custom Dropdown Trigger Button */}
+                        <button
+                          type="button"
+                          onClick={() => setOpenDropdownId(openDropdownId === app.id ? null : app.id)}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold ring-1 transition-all cursor-pointer shadow-xs hover:shadow-md active:scale-98 ${getStatusColor(app.status)}`}
                         >
-                          <option value="PENDING" className="text-gray-900 bg-white">PENDING</option>
-                          <option value="REVIEWED" className="text-gray-900 bg-white">REVIEWED</option>
-                          <option value="ACCEPTED" className="text-gray-900 bg-white">ACCEPTED</option>
-                          <option value="REJECTED" className="text-gray-900 bg-white">REJECTED</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none opacity-60" />
+                          <div className="flex items-center gap-2">
+                            {app.status === "PENDING" && <Clock className="h-3.5 w-3.5 text-amber-600" />}
+                            {app.status === "SHORTLISTED" && <Sparkles className="h-3.5 w-3.5 text-purple-600" />}
+                            {app.status === "ACCEPTED" && <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />}
+                            {app.status === "REJECTED" && <XCircle className="h-3.5 w-3.5 text-rose-600" />}
+                            <span>{app.status}</span>
+                          </div>
+                          <ChevronDown className={`h-4 w-4 transition-transform ${openDropdownId === app.id ? "rotate-180" : ""}`} />
+                        </button>
+
+                        {/* Floating Themed Options Menu */}
+                        {openDropdownId === app.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-20"
+                              onClick={() => setOpenDropdownId(null)}
+                            />
+                            <div className="absolute left-0 right-0 top-full mt-2 z-30 bg-white/95 backdrop-blur-md rounded-2xl p-1.5 border border-gray-100 shadow-xl shadow-blue-900/10 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+                              {[
+                                { key: "PENDING", label: "PENDING", icon: Clock, color: "text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200" },
+                                { key: "SHORTLISTED", label: "SHORTLISTED", icon: Sparkles, color: "text-purple-700 bg-purple-50 hover:bg-purple-100 border-purple-200" },
+                                { key: "ACCEPTED", label: "ACCEPTED", icon: CheckCircle, color: "text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border-emerald-200" },
+                                { key: "REJECTED", label: "REJECTED", icon: XCircle, color: "text-rose-700 bg-rose-50 hover:bg-rose-100 border-rose-200" },
+                              ].map((opt) => (
+                                <button
+                                  key={opt.key}
+                                  type="button"
+                                  onClick={() => handleStatusChange(app.id, opt.key)}
+                                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${opt.color} ${
+                                    app.status === opt.key ? "ring-2 ring-blue-500/20 font-black" : "opacity-90 hover:opacity-100"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <opt.icon className="h-3.5 w-3.5" />
+                                    <span>{opt.label}</span>
+                                  </div>
+                                  {app.status === opt.key && <CheckCircle className="h-3.5 w-3.5" />}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -332,13 +401,13 @@ export default function ApplicantsPage() {
 
       {/* Review Candidate Detail Modal */}
       {selectedApplicant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-gray-100 space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl border border-gray-100 space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <h3 className="text-xl font-bold text-gray-900">Applicant Details</h3>
+              <h3 className="text-xl font-bold text-gray-900">Candidate Evaluation & Fit Analysis</h3>
               <button
                 onClick={() => setSelectedApplicant(null)}
-                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -348,13 +417,100 @@ export default function ApplicantsPage() {
               <img
                 src={selectedApplicant.avatar}
                 alt={selectedApplicant.name}
-                className="h-16 w-16 rounded-2xl border border-gray-100"
+                className="h-16 w-16 rounded-2xl border border-gray-100 shrink-0"
               />
               <div>
                 <h4 className="text-xl font-bold text-gray-900">{selectedApplicant.name}</h4>
                 <p className="text-sm text-gray-500 font-medium">{selectedApplicant.email}</p>
               </div>
             </div>
+
+            {/* Score Breakdown Cards */}
+            <div className="grid grid-cols-3 gap-3 bg-linear-to-r from-blue-50/70 to-violet-50/70 p-4 rounded-2xl border border-blue-100">
+              <div className="text-center p-2 bg-white/80 rounded-xl shadow-xs">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Final Weighted Score</p>
+                <p className="text-xl font-extrabold text-blue-600">{selectedApplicant.fitScore}%</p>
+                <p className="text-[9px] text-gray-400 font-medium">70% Skill + 30% Exp</p>
+              </div>
+              <div className="text-center p-2 bg-white/80 rounded-xl shadow-xs">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Skill Match (Cosine)</p>
+                <p className="text-xl font-extrabold text-violet-600">{selectedApplicant.skillMatchPercentage}%</p>
+                <p className="text-[9px] text-gray-400 font-medium">Cosine Similarity</p>
+              </div>
+              <div className="text-center p-2 bg-white/80 rounded-xl shadow-xs">
+                <p className="text-[10px] font-bold text-gray-400 uppercase">Experience Score</p>
+                <p className="text-xl font-extrabold text-emerald-600">{Math.round((selectedApplicant.experienceScore || 0) * 100)}%</p>
+                <p className="text-[9px] text-gray-400 font-medium">{selectedApplicant.experienceYears} Yrs Exp</p>
+              </div>
+            </div>
+
+            {/* Tech Skill Breakdown */}
+            <div className="space-y-3">
+              {selectedApplicant.matchedSkills?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Matched Skills ({selectedApplicant.matchedSkills.length})</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedApplicant.matchedSkills.map((sk: string, i: number) => (
+                      <span key={i} className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-lg border border-emerald-200">
+                        ✓ {sk}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedApplicant.missingSkills?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Missing Skills ({selectedApplicant.missingSkills.length})</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedApplicant.missingSkills.map((sk: string, i: number) => (
+                      <span key={i} className="px-2.5 py-1 bg-amber-50 text-amber-700 font-bold text-xs rounded-lg border border-amber-200">
+                        ! {sk}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedApplicant.skills?.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">All Extracted Resume Skills ({selectedApplicant.skills.length})</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedApplicant.skills.map((sk: string, i: number) => (
+                      <span key={i} className="px-2.5 py-1 bg-blue-50 text-blue-700 font-medium text-xs rounded-lg border border-blue-100">
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Education & Certifications */}
+            {(selectedApplicant.education?.length > 0 || selectedApplicant.certifications?.length > 0) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-2xl">
+                {selectedApplicant.education?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Education</p>
+                    <ul className="text-xs text-gray-700 space-y-1 font-medium list-disc pl-4">
+                      {selectedApplicant.education.map((edu: string, i: number) => (
+                        <li key={i}>{edu}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {selectedApplicant.certifications?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Certifications</p>
+                    <ul className="text-xs text-gray-700 space-y-1 font-medium list-disc pl-4">
+                      {selectedApplicant.certifications.map((cert: string, i: number) => (
+                        <li key={i}>{cert}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="bg-gray-50 p-4 rounded-2xl space-y-2">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Candidate Bio</p>
@@ -368,7 +524,7 @@ export default function ApplicantsPage() {
               </div>
               <button
                 onClick={() => openResume(selectedApplicant.resumeURL)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-blue-700 transition"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-blue-700 transition cursor-pointer"
               >
                 <ExternalLink className="h-4 w-4" />
                 View Resume PDF
@@ -378,9 +534,183 @@ export default function ApplicantsPage() {
             <div className="pt-4 border-t border-gray-100 flex justify-end">
               <button
                 onClick={() => setSelectedApplicant(null)}
-                className="px-6 py-2.5 bg-gray-900 text-white font-bold text-sm rounded-xl hover:bg-black transition"
+                className="px-6 py-2.5 bg-gray-900 text-white font-bold text-sm rounded-xl hover:bg-black transition cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fitting Algorithm Breakdown Modal */}
+      {fitModalApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border border-gray-100 space-y-6 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 text-white flex items-center justify-center shadow-md">
+                  <Sparkles className="h-5 w-5 fill-blue-100" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-gray-900">Fitting Algorithm Breakdown</h3>
+                  <p className="text-xs font-semibold text-gray-500">
+                    Evaluating candidate match for <span className="text-blue-600 font-bold">{data?.jobTitle || "Job Listing"}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setFitModalApplicant(null)}
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Candidate Identity summary */}
+            <div className="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
+              <img
+                src={fitModalApplicant.avatar}
+                alt={fitModalApplicant.name}
+                className="h-12 w-12 rounded-xl border border-gray-200 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <h4 className="text-base font-bold text-gray-900 truncate">{fitModalApplicant.name}</h4>
+                <p className="text-xs text-gray-500 font-medium truncate">{fitModalApplicant.email}</p>
+              </div>
+              <div className="px-4 py-2 bg-blue-600 text-white font-black text-sm rounded-xl shadow-md">
+                {fitModalApplicant.fitScore}% Fit
+              </div>
+            </div>
+
+            {/* Mathematical Formula Explanation */}
+            <div className="p-4 rounded-2xl bg-linear-to-r from-blue-50 to-violet-50 border border-blue-100 space-y-2">
+              <p className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                Weighted Evaluation Formula
+              </p>
+              <div className="bg-white/80 p-3 rounded-xl border border-blue-100/50 text-xs font-mono text-gray-800 font-bold text-center shadow-2xs">
+                Final Score = (Cosine Similarity × 0.7) + (Experience Score × 0.3)
+              </div>
+              <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
+                Technical skills contribute <span className="font-bold text-gray-900">70%</span> of the final evaluation via vector similarity, while relevant work experience contributes <span className="font-bold text-gray-900">30%</span>.
+              </p>
+            </div>
+
+            {/* Score Component Breakdown Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 text-center">
+                <p className="text-[10px] font-extrabold text-blue-500 uppercase tracking-wider">Final Weighted Fit</p>
+                <p className="text-2xl font-black text-blue-600 my-1">{fitModalApplicant.fitScore}%</p>
+                <p className="text-[10px] font-semibold text-gray-500">Combined Ranking</p>
+              </div>
+              <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-100 text-center">
+                <p className="text-[10px] font-extrabold text-purple-500 uppercase tracking-wider">Skill Match (70%)</p>
+                <p className="text-2xl font-black text-purple-600 my-1">{fitModalApplicant.skillMatchPercentage}%</p>
+                <p className="text-[10px] font-semibold text-gray-500">Cosine Vector Score</p>
+              </div>
+              <div className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 text-center">
+                <p className="text-[10px] font-extrabold text-emerald-500 uppercase tracking-wider">Experience (30%)</p>
+                <p className="text-2xl font-black text-emerald-600 my-1">{Math.round((fitModalApplicant.experienceScore || 0) * 100)}%</p>
+                <p className="text-[10px] font-semibold text-gray-500">{fitModalApplicant.experienceYears} Yrs Experience</p>
+              </div>
+            </div>
+
+            {/* Detailed Skills Comparison */}
+            <div className="space-y-4 pt-2">
+              {/* Matched Required Skills */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    Matched Required Skills ({fitModalApplicant.matchedSkills?.length || 0})
+                  </p>
+                  <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    Matches Job Post
+                  </span>
+                </div>
+                {fitModalApplicant.matchedSkills?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 p-3 bg-emerald-50/30 rounded-2xl border border-emerald-100">
+                    {fitModalApplicant.matchedSkills.map((sk: string, i: number) => (
+                      <span key={i} className="px-3 py-1 bg-emerald-100/80 text-emerald-800 font-bold text-xs rounded-xl border border-emerald-200 flex items-center gap-1 shadow-2xs">
+                        <CheckCircle className="h-3 w-3 text-emerald-600" />
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-500 font-medium text-center">
+                    No direct skill matches found for required job skills.
+                  </div>
+                )}
+              </div>
+
+              {/* Missing Required Skills */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <XCircle className="h-4 w-4 text-rose-500" />
+                    Missing Required Skills ({fitModalApplicant.missingSkills?.length || 0})
+                  </p>
+                  <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                    Required by Job
+                  </span>
+                </div>
+                {fitModalApplicant.missingSkills?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 p-3 bg-rose-50/30 rounded-2xl border border-rose-100">
+                    {fitModalApplicant.missingSkills.map((sk: string, i: number) => (
+                      <span key={i} className="px-3 py-1 bg-rose-100/80 text-rose-800 font-bold text-xs rounded-xl border border-rose-200 flex items-center gap-1 shadow-2xs">
+                        <XCircle className="h-3 w-3 text-rose-500" />
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-emerald-50/50 rounded-xl text-xs text-emerald-700 font-bold text-center border border-emerald-100">
+                    ✓ All required job skills were matched!
+                  </div>
+                )}
+              </div>
+
+              {/* All Extracted Resume Skills */}
+              <div>
+                <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  All Extracted Resume Skills ({fitModalApplicant.skills?.length || 0})
+                </p>
+                {fitModalApplicant.skills?.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 p-3 bg-gray-50 rounded-2xl border border-gray-100 max-h-32 overflow-y-auto">
+                    {fitModalApplicant.skills.map((sk: string, i: number) => (
+                      <span key={i} className="px-2.5 py-1 bg-white text-gray-700 font-semibold text-xs rounded-lg border border-gray-200 shadow-2xs">
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-400 font-medium text-center">
+                    No technical skills parsed from candidate resume.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Fine-Tuning Advice Banner */}
+            <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/80 text-xs text-amber-900 space-y-1">
+              <p className="font-bold flex items-center gap-1.5 text-amber-900">
+                💡 How to Fine-Tune Fitting Results:
+              </p>
+              <p className="text-amber-800 font-medium leading-relaxed">
+                If candidate ranking feels inaccurate, edit the <span className="font-bold">Required Skills</span> or <span className="font-bold">Work Experience</span> fields on your job listing. The Cosine Similarity vector recalculates automatically against updated keywords!
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-4 border-t border-gray-100 flex justify-end">
+              <button
+                onClick={() => setFitModalApplicant(null)}
+                className="px-6 py-2.5 bg-gray-900 text-white font-bold text-sm rounded-xl hover:bg-black transition cursor-pointer"
+              >
+                Close Explanation
               </button>
             </div>
           </div>

@@ -80,7 +80,7 @@ export default function DashboardPage() {
     let statusColor = "bg-blue-50 text-blue-600";
     if (app.status === "ACCEPTED") statusColor = "bg-emerald-50 text-emerald-600";
     if (app.status === "REJECTED") statusColor = "bg-rose-50 text-rose-600";
-    if (app.status === "REVIEWED") statusColor = "bg-amber-50 text-amber-600";
+    if (app.status === "SHORTLISTED") statusColor = "bg-purple-50 text-purple-600";
 
     return {
       id: app.id,

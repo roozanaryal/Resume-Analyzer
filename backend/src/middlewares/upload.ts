@@ -24,13 +24,11 @@ export const uploadResume = multer({
   fileFilter: (_req, file, cb) => {
     const allowedTypes = [
       "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Only .pdf, .doc and .docx format allowed!"));
+      cb(new Error("Only .pdf format allowed!"));
     }
   },
 });

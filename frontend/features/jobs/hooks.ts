@@ -167,7 +167,20 @@ export const useUpdateApplicationStatus = () => {
       applicationId: string;
       status: string;
     }) => jobsApi.updateApplicationStatus({ applicationId, status }),
-    onSuccess: () => {
+    onMutate: async ({ applicationId, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["job-applicants"] });
+
+      queryClient.setQueriesData({ queryKey: ["job-applicants"] }, (oldData: any) => {
+        if (!oldData || !oldData.applications) return oldData;
+        return {
+          ...oldData,
+          applications: oldData.applications.map((app: any) =>
+            app.id === applicationId ? { ...app, status } : app
+          ),
+        };
+      });
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["job-applicants"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },

@@ -16,7 +16,7 @@ export default function PostJobPage() {
   const [location, setLocation] = useState("");
   const [employmentType, setEmploymentType] = useState("Full-Time");
   const [salaryRange, setSalaryRange] = useState("");
-  const [experience, setExperience] = useState("");
+
   const [description, setDescription] = useState("");
   const [responsibilities, setResponsibilities] = useState("");
   const [qualifications, setQualifications] = useState("");
@@ -51,7 +51,7 @@ export default function PostJobPage() {
     const extraSections: string[] = [];
 
     if (department.trim()) extraSections.push(`Department: ${department.trim()}`);
-    if (experience.trim()) extraSections.push(`Experience Level: ${experience.trim()}`);
+    if (experienceRequired.trim()) extraSections.push(`Experience: ${experienceRequired.trim()}`);
     if (responsibilities.trim()) extraSections.push(`Key Responsibilities:\n${responsibilities.trim()}`);
     if (qualifications.trim()) extraSections.push(`Qualifications:\n${qualifications.trim()}`);
     if (benefits.trim()) extraSections.push(`Perks & Benefits:\n${benefits.trim()}`);
@@ -87,7 +87,6 @@ export default function PostJobPage() {
       setDepartment("");
       setLocation("");
       setSalaryRange("");
-      setExperience("");
       setDescription("");
       setResponsibilities("");
       setQualifications("");
@@ -234,33 +233,11 @@ export default function PostJobPage() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block">
-                  <span className="text-sm font-semibold text-gray-700">Experience Level</span>
-                  <input
-                    value={experience}
-                    onChange={(event) => setExperience(event.target.value)}
-                    placeholder="5+ years"
-                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="text-sm font-semibold text-gray-700">Candidate Requirements</span>
-                  <input
-                    value={qualifications}
-                    onChange={(event) => setQualifications(event.target.value)}
-                    placeholder="Portfolio, React, Figma"
-                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
-                  />
-                </label>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="block">
-                  <span className="text-sm font-semibold text-gray-700">Work Experience Required (for database)</span>
+                  <span className="text-sm font-semibold text-gray-700">Work Experience Required</span>
                   <input
                     value={experienceRequired}
                     onChange={(event) => setExperienceRequired(event.target.value)}
-                    placeholder="e.g. 3 years as Fullstack Developer"
+                    placeholder="e.g. 5+ years"
                     className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
                   />
                 </label>
@@ -271,6 +248,18 @@ export default function PostJobPage() {
                     value={skillsRequired}
                     onChange={(event) => setSkillsRequired(event.target.value)}
                     placeholder="e.g. React, Node.js, AWS"
+                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-1">
+                <label className="block">
+                  <span className="text-sm font-semibold text-gray-700">Candidate Requirements</span>
+                  <input
+                    value={qualifications}
+                    onChange={(event) => setQualifications(event.target.value)}
+                    placeholder="Portfolio, React, Figma"
                     className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
                   />
                 </label>

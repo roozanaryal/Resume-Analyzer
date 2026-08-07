@@ -17,7 +17,7 @@ export default function SignupPage() {
     watch,
     formState: { errors },
   } = useForm<RegisterInput>({
-    resolver: zodResolver(RegisterSchema),
+    resolver: zodResolver(RegisterSchema) as any,
     defaultValues: {
       role: "CANDIDATE",
     },

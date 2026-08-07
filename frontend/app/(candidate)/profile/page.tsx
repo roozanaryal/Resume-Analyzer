@@ -211,7 +211,7 @@ export default function CandidateProfilePage() {
                   {uploadResumeMutation.isPending ? "Uploading..." : "Choose File"}
                 </span>
                 <span className="text-[10px] text-gray-400 font-semibold mt-1">
-                  PDF, DOC, DOCX up to 5MB
+                  PDF only up to 5MB
                 </span>
               </div>
 
@@ -219,7 +219,7 @@ export default function CandidateProfilePage() {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
-                accept=".pdf,.doc,.docx"
+                accept=".pdf"
                 className="hidden"
               />
             </div>

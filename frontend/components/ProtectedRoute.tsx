@@ -14,13 +14,6 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     if (!isLoading) {
       if (!user) {
         router.push("/login");
-      } else if (pathname !== "/onboarding") {
-        const isCandidateIncomplete = user.role === "CANDIDATE" && (!user.skills || !user.preferredIndustry);
-        const isHRIncomplete = user.role === "HR" && (!user.companyName || !user.companyIndustry);
-        
-        if (isCandidateIncomplete || isHRIncomplete) {
-          router.push("/onboarding");
-        }
       }
     }
   }, [user, isLoading, router, pathname]);
