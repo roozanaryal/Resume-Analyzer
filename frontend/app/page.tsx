@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, Briefcase, Users, Building2, TrendingUp, ChevronRight, LogOut, User as UserIcon } from "lucide-react";
+import React, { useEffect } from "react";
+import { Search, Briefcase, Users, Building2, TrendingUp, ChevronRight, LogOut, User as UserIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser, useLogout } from "@/features/auth/hooks";
@@ -10,6 +11,16 @@ export default function Home() {
   const { mutate: logout } = useLogout();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (user.role === "HR") {
+        router.replace("/postjob");
+      } else {
+        router.replace("/find-jobs");
+      }
+    }
+  }, [user, isLoading, router]);
+
   const handleProtectedNavigate = (targetPath: string) => {
     if (!user) {
       router.push("/login");
@@ -17,6 +28,17 @@ export default function Home() {
       router.push(targetPath);
     }
   };
+
+  if (isLoading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-3 text-gray-500 font-medium">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-white overflow-hidden">
@@ -49,35 +71,15 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6">
-          {isLoading ? (
-            <div className="h-8 w-20 bg-gray-100 animate-pulse rounded-lg" />
-          ) : user ? (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-xl">
-                <UserIcon className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-semibold text-gray-700">{user.name || user.email}</span>
-              </div>
-              <button
-                onClick={() => logout()}
-                className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-red-600 transition-colors cursor-pointer"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-            </div>
-          ) : (
-            <>
-              <Link href="/login" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-xl bg-linear-to-r from-blue-600 to-violet-600 px-5 sm:px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
-              >
-                Sign Up
-              </Link>
-            </>
-          )}
+          <Link href="/login" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+            Login
+          </Link>
+          <Link
+            href="/signup"
+            className="rounded-xl bg-linear-to-r from-blue-600 to-violet-600 px-5 sm:px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all active:scale-95"
+          >
+            Sign Up
+          </Link>
         </div>
       </nav>
 

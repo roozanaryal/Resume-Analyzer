@@ -19,7 +19,6 @@ export default function PostJobPage() {
 
   const [description, setDescription] = useState("");
   const [responsibilities, setResponsibilities] = useState("");
-  const [qualifications, setQualifications] = useState("");
   const [benefits, setBenefits] = useState("");
   const [skillsRequired, setSkillsRequired] = useState("");
   const [experienceRequired, setExperienceRequired] = useState("");
@@ -53,7 +52,6 @@ export default function PostJobPage() {
     if (department.trim()) extraSections.push(`Department: ${department.trim()}`);
     if (experienceRequired.trim()) extraSections.push(`Experience: ${experienceRequired.trim()}`);
     if (responsibilities.trim()) extraSections.push(`Key Responsibilities:\n${responsibilities.trim()}`);
-    if (qualifications.trim()) extraSections.push(`Qualifications:\n${qualifications.trim()}`);
     if (benefits.trim()) extraSections.push(`Perks & Benefits:\n${benefits.trim()}`);
 
     if (extraSections.length > 0) {
@@ -89,7 +87,6 @@ export default function PostJobPage() {
       setSalaryRange("");
       setDescription("");
       setResponsibilities("");
-      setQualifications("");
       setBenefits("");
       setSkillsRequired("");
       setExperienceRequired("");
@@ -253,17 +250,7 @@ export default function PostJobPage() {
                 </label>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-1">
-                <label className="block">
-                  <span className="text-sm font-semibold text-gray-700">Candidate Requirements</span>
-                  <input
-                    value={qualifications}
-                    onChange={(event) => setQualifications(event.target.value)}
-                    placeholder="Portfolio, React, Figma"
-                    className="mt-2 w-full rounded-2xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-200"
-                  />
-                </label>
-              </div>
+
 
               <label className="block">
                 <span className="text-sm font-semibold text-gray-700">
@@ -372,7 +359,6 @@ export default function PostJobPage() {
                 </div>
                 <div className="space-y-3 text-sm text-gray-600">
                   <p className="whitespace-pre-line">{description || "Write a concise description of the role, responsibilities, and team culture to help align top candidates."}</p>
-                  {qualifications && <p className="text-gray-500">Qualifications: {qualifications}</p>}
                   {benefits && <p className="text-gray-500 text-xs font-medium">Benefits: {benefits}</p>}
                 </div>
               </div>

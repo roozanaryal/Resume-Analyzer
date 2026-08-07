@@ -87,6 +87,70 @@ export function parseJobRequiredExperience(job: JobRequirementsForRanking): numb
   return 0;
 }
 
+// Mapping of high-level/framework skills to their implied/dependent technologies
+export const SKILL_DEPENDENCY_MAP: Record<string, string[]> = {
+  // Front-end frameworks & libraries
+  "next.js": ["React", "JavaScript", "HTML", "CSS"],
+  "react": ["JavaScript", "HTML", "CSS"],
+  "vue": ["JavaScript", "HTML", "CSS"],
+  "angular": ["TypeScript", "JavaScript", "HTML", "CSS"],
+  "svelte": ["JavaScript", "HTML", "CSS"],
+  "react native": ["React", "JavaScript", "HTML", "CSS"],
+
+  // Runtimes & Backend Frameworks
+  "nestjs": ["TypeScript", "NodeJS", "JavaScript"],
+  "express": ["NodeJS", "JavaScript"],
+  "nodejs": ["JavaScript"],
+
+  // Languages
+  "typescript": ["JavaScript"],
+
+  // Backend / Fullstack frameworks
+  "django": ["Python"],
+  "flask": ["Python"],
+  "fastapi": ["Python"],
+  "spring boot": ["Java"],
+  "spring": ["Java"],
+  "laravel": ["PHP"],
+  "ruby on rails": ["Ruby"],
+  "flutter": ["Dart"],
+};
+
+/**
+ * Expands candidate skills recursively to include implied/dependent skills
+ */
+export function expandCandidateSkills(candidateSkills: string[]): string[] {
+  const expandedSet = new Set<string>();
+
+  for (const s of candidateSkills) {
+    if (s) expandedSet.add(s.trim());
+  }
+
+  let addedNew = true;
+  while (addedNew) {
+    addedNew = false;
+    const currentSkills = Array.from(expandedSet);
+    for (const skill of currentSkills) {
+      const norm = normalizeSkill(skill);
+      const dependencies = SKILL_DEPENDENCY_MAP[norm];
+      if (dependencies) {
+        for (const dep of dependencies) {
+          const normDep = normalizeSkill(dep);
+          const alreadyHas = Array.from(expandedSet).some(
+            (s) => normalizeSkill(s) === normDep
+          );
+          if (!alreadyHas) {
+            expandedSet.add(dep);
+            addedNew = true;
+          }
+        }
+      }
+    }
+  }
+
+  return Array.from(expandedSet);
+}
+
 /**
  * Calculates Cosine Similarity between Job Required Skill Vector and Candidate Skill Vector
  * Supports case-insensitive matching, alias normalization (node.js == NodeJS == Node), and substring matches.
@@ -99,16 +163,18 @@ export function calculateCosineSimilarity(
   matchedSkills: string[];
   missingSkills: string[];
 } {
+  const expandedCandidateSkills = expandCandidateSkills(candidateSkills);
+
   if (jobSkills.length === 0) {
-    return { similarity: 1.0, matchedSkills: candidateSkills, missingSkills: [] };
+    return { similarity: 1.0, matchedSkills: expandedCandidateSkills, missingSkills: [] };
   }
 
   // Build unique job skills dictionary
   const jobDict = Array.from(new Set(jobSkills));
   
   // Normalize candidate skills into canonical forms & lowercased set
-  const normCandidateSkills = candidateSkills.map((s) => normalizeSkill(s)).filter(Boolean);
-  const candLowerSkills = candidateSkills.map((s) => s.toLowerCase().trim());
+  const normCandidateSkills = expandedCandidateSkills.map((s) => normalizeSkill(s)).filter(Boolean);
+  const candLowerSkills = expandedCandidateSkills.map((s) => s.toLowerCase().trim());
 
   let dotProduct = 0;
   let jobMagSq = 0;
