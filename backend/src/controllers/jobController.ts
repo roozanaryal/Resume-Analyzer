@@ -6,6 +6,7 @@ import path from "path";
 import jwt from "jsonwebtoken";
 import { parseAndSaveUserResume, extractSkills, extractExperienceYears, extractSkillsFromProfile } from "../services/resumeParserService.js";
 import { rankCandidates, type CandidateProfileForRanking } from "../services/rankingService.js";
+import { sendShortlistedEmail } from "../services/emailService.js";
 
 // Helper interface for authenticated requests
 interface AuthRequest extends Request {
@@ -875,7 +876,12 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
 
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
-      include: { job: true },
+      include: {
+        job: {
+          include: { employer: true }
+        },
+        user: true,
+      },
     });
 
     if (!application) {
@@ -890,6 +896,15 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response) =
       where: { id: applicationId },
       data: { status },
     });
+
+    if (status === "SHORTLISTED") {
+      await sendShortlistedEmail(
+        application.user.email,
+        application.user.name,
+        application.job.title,
+        application.job.employer.companyName || application.job.employer.name
+      );
+    }
 
     return res.status(200).json({
       message: "Application status updated successfully",
