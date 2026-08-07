@@ -36,7 +36,7 @@ export const useLogout = () => {
     mutationFn: authApi.logout,
     onSuccess: () => {
       queryClient.setQueryData(["user"], null);
-      router.push("/login");
+      router.push("/");
     },
   });
 };

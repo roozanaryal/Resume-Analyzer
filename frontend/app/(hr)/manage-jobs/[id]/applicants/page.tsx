@@ -66,7 +66,15 @@ export default function ApplicantsPage() {
       : "Recently";
 
     // Calculate real fit score from backend weighted ranking algorithm
-    const fitScore = app.finalScore !== undefined ? app.finalScore : 80;
+    const skillMatchPercentage =
+      typeof app.skillMatchPercentage === "number" ? app.skillMatchPercentage : 0;
+    const experienceScore =
+      typeof app.experienceScore === "number" ? app.experienceScore : 0;
+
+    const fitScore =
+      typeof app.finalScore === "number"
+        ? app.finalScore
+        : Math.round(skillMatchPercentage * 0.7 + experienceScore * 30);
 
     return {
       id: app.id,
@@ -80,8 +88,8 @@ export default function ApplicantsPage() {
       status: optimisticStatuses[app.id] || app.status || "PENDING",
       resumeURL: app.resumeURL,
       fitScore,
-      skillMatchPercentage: app.skillMatchPercentage || 0,
-      experienceScore: app.experienceScore || 0,
+      skillMatchPercentage,
+      experienceScore,
       experienceYears: app.experienceYears || 0,
       matchedSkills: app.matchedSkills || [],
       missingSkills: app.missingSkills || [],
