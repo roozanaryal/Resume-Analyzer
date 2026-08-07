@@ -302,23 +302,7 @@ export default function FindJobsPage() {
 
         {/* Main Content */}
         <main className="lg:col-span-9">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
-            <p className="font-semibold text-gray-600 text-sm sm:text-base">
-              Showing{" "}
-              <span className="text-gray-900 font-bold">
-                {filteredJobs.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
-              </span>{" "}
-              to{" "}
-              <span className="text-gray-900 font-bold">
-                {Math.min(currentPage * ITEMS_PER_PAGE, filteredJobs.length)}
-              </span>{" "}
-              of{" "}
-              <span className="text-gray-900 font-bold">
-                {filteredJobs.length}
-              </span>{" "}
-              jobs
-            </p>
-
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end mb-6 sm:mb-8 gap-4">
             <div className="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100">
               <button
                 onClick={() => setView("grid")}
@@ -389,16 +373,7 @@ export default function FindJobsPage() {
                       Next
                     </button>
                   </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 font-medium">
-                        Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{" "}
-                        <span className="font-semibold text-gray-900">
-                          {Math.min(currentPage * ITEMS_PER_PAGE, filteredJobs.length)}
-                        </span>{" "}
-                        of <span className="font-semibold text-gray-900">{filteredJobs.length}</span> results
-                      </p>
-                    </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                     <div>
                       <nav className="relative z-0 inline-flex rounded-2xl shadow-sm -space-x-px bg-white border border-gray-100 p-1 gap-1" aria-label="Pagination">
                         <button
