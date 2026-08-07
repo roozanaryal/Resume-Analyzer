@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Briefcase, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Briefcase, Mail, Lock, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginInput, LoginSchema } from "@/features/auth/types";
@@ -63,7 +63,9 @@ export default function LoginPage() {
                   {...register("email")}
                   type="email"
                   placeholder="name@company.com"
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className={`w-full pl-10 pr-4 py-2 bg-gray-50 border rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all ${
+                    error ? "border-red-300 bg-red-50/20" : "border-gray-100"
+                  }`}
                 />
               </div>
               {errors.email && (
@@ -91,7 +93,9 @@ export default function LoginPage() {
                   {...register("password")}
                   type="password"
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className={`w-full pl-10 pr-4 py-2 bg-gray-50 border rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all ${
+                    error ? "border-red-300 bg-red-50/20" : "border-gray-100"
+                  }`}
                 />
               </div>
               {errors.password && (
@@ -102,12 +106,16 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="p-1.5 rounded-lg bg-red-50 border border-red-100">
-                <p className="text-xs text-red-600">
-                  {(error as any).response?.data?.message ||
-                    (error as any).response?.data?.errors?.[0]?.msg ||
-                    "Login failed. Please try again."}
-                </p>
+              <div className="p-3 rounded-2xl bg-red-50/80 border border-red-200/60 flex items-start gap-2.5 shadow-xs animate-in fade-in slide-in-from-top-1 duration-200">
+                <AlertCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-red-800 mb-0.5">Invalid Credentials</p>
+                  <p className="text-xs text-red-600 leading-relaxed">
+                    {(error as any).response?.data?.message ||
+                      (error as any).response?.data?.errors?.[0]?.msg ||
+                      "Invalid credentials. Please check your email and password."}
+                  </p>
+                </div>
               </div>
             )}
 

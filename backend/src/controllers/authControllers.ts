@@ -73,13 +73,13 @@ export const loginUser = async (
   });
 
   if (!user) {
-    return res.status(401).json({ message: "Invalid email or password" });
+    return res.status(401).json({ message: "Invalid credentials. Please check your email and password." });
   }
 
   const isMatched = await bcrypt.compare(password, user.password);
 
   if (!isMatched) {
-    return res.status(401).json({ message: "Invalid email or password" });
+    return res.status(401).json({ message: "Invalid credentials. Please check your email and password." });
   }
 
   const token = generateToken(user.id, res);
