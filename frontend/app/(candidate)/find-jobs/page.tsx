@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Search, MapPin, ChevronDown, LayoutGrid, List, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, MapPin, ChevronDown, LayoutGrid, List, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import JobCard, { Job } from "@/components/JobCard";
 import SalaryRangeSlider from "@/components/SalaryRangeSlider";
 import { useJobs, useSavedJobs, useToggleSaveJob } from "@/features/jobs/hooks";
 import { useDebounce } from "@/hooks/use-debounce";
+
+const ITEMS_PER_PAGE = 8;
 
 export default function FindJobsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -27,6 +29,8 @@ export default function FindJobsPage() {
     jobType: true,
     salary: true,
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Calculate selected types for backend query
   const selectedTypes = Object.keys(jobTypeFilters).filter((key) => jobTypeFilters[key]);
@@ -117,6 +121,17 @@ export default function FindJobsPage() {
 
     return matchesTitle && matchesLocation && matchesType && matchesSalary;
   });
+
+  // Reset to first page when search filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, location, jobTypeFilters, salaryRange]);
+
+  const totalPages = Math.ceil(filteredJobs.length / ITEMS_PER_PAGE);
+  const paginatedJobs = filteredJobs.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const toggleSaveJob = (id: string | number) => {
     const isSaved = savedJobIds.includes(String(id));
@@ -290,6 +305,14 @@ export default function FindJobsPage() {
             <p className="font-semibold text-gray-600 text-sm sm:text-base">
               Showing{" "}
               <span className="text-gray-900 font-bold">
+                {filteredJobs.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}
+              </span>{" "}
+              to{" "}
+              <span className="text-gray-900 font-bold">
+                {Math.min(currentPage * ITEMS_PER_PAGE, filteredJobs.length)}
+              </span>{" "}
+              of{" "}
+              <span className="text-gray-900 font-bold">
                 {filteredJobs.length}
               </span>{" "}
               jobs
@@ -318,35 +341,106 @@ export default function FindJobsPage() {
               <span>Loading jobs...</span>
             </div>
           ) : (
-            /* Job Grid */
-            <div
-              className={`grid gap-5 sm:gap-6 ${view === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
-            >
-              {filteredJobs.length > 0 ? (
-                filteredJobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    isSaved={savedJobIds.includes(String(job.id))}
-                    onSaveToggle={toggleSaveJob}
-                    onApply={toggleApplyJob}
-                    isApplied={
-                      appliedJobs.includes(job.id) || job.status === "Applied"
-                    }
-                    view={view}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full text-center py-12 bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
-                  <p className="text-gray-500 font-semibold">
-                    No jobs found. Try adjusting your search or filters.
-                  </p>
+            <>
+              {/* Job Grid */}
+              <div
+                className={`grid gap-5 sm:gap-6 ${view === "grid" ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"}`}
+              >
+                {paginatedJobs.length > 0 ? (
+                  paginatedJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isSaved={savedJobIds.includes(String(job.id))}
+                      onSaveToggle={toggleSaveJob}
+                      onApply={toggleApplyJob}
+                      isApplied={
+                        appliedJobs.includes(job.id) || job.status === "Applied"
+                      }
+                      view={view}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12 bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+                    <p className="text-gray-500 font-semibold">
+                      No jobs found. Try adjusting your search or filters.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-100 pt-6 mt-8">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500 font-medium">
+                        Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{" "}
+                        <span className="font-semibold text-gray-900">
+                          {Math.min(currentPage * ITEMS_PER_PAGE, filteredJobs.length)}
+                        </span>{" "}
+                        of <span className="font-semibold text-gray-900">{filteredJobs.length}</span> results
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-2xl shadow-sm -space-x-px bg-white border border-gray-100 p-1 gap-1" aria-label="Pagination">
+                        <button
+                          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className="relative inline-flex items-center p-2 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          <span className="sr-only">Previous</span>
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`relative inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                              currentPage === page
+                                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+
+                        <button
+                          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                          className="relative inline-flex items-center p-2 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        >
+                          <span className="sr-only">Next</span>
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
+            </>
           )}
         </main>
       </div>
     </>
   );
 }
+
